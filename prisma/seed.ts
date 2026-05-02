@@ -1,17 +1,14 @@
-import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-const adapter = new PrismaBetterSqlite3({
-  url: "file:./dev.db"
-});
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 async function main() {
   // Clear existing data
   await prisma.review.deleteMany();
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
+  await prisma.coupon.deleteMany();
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();
   await prisma.store.deleteMany();
@@ -66,6 +63,8 @@ async function main() {
   });
 
   console.log("Seed data created successfully!");
+  console.log("Admin:", admin.email);
+  console.log("Store Owner:", owner.email);
 }
 
 main()
