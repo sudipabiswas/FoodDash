@@ -1,0 +1,118 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      String   @default("CUSTOMER") // ADMIN, STORE_OWNER, CUSTOMER, DELIVERY_MAN
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stores         Store[]        @relation("StoreOwner")
+  orders         Order[]        @relation("CustomerOrders")
+  deliveryOrders Order[]        @relation("DeliveryManOrders")
+  reviews        Review[]
+}
+
+model Store {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  ownerId     String
+  owner       User     @relation("StoreOwner", fields: [ownerId], references: [id])
+  active      Boolean  @default(true)
+  deliveryZone   String?
+  deliveryCharge Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  categories Category[]
+  products   Product[]
+  orders     Order[]
+  reviews    Review[]
+  coupons    Coupon[]
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
+  products  Product[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id])
+  orderItems  OrderItem[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  customerId      String
+  customer        User     @relation("CustomerOrders", fields: [customerId], references: [id])
+  storeId         String
+  store           Store    @relation(fields: [storeId], references: [id])
+  deliveryManId   String?
+  deliveryMan     User?    @relation("DeliveryManOrders", fields: [deliveryManId], references: [id])
+  status          String   @default("PENDING") // PENDING, ACCEPTED, PREPARING, OUT_FOR_DELIVERY, DELIVERED, CANCELLED
+  totalPrice      Float
+  deliveryAddress String
+  deliveryCharge  Float    @default(0)
+  items           OrderItem[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float    // Price at the time of order
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   User     @relation(fields: [customerId], references: [id])
+  storeId    String
+  store      Store    @relation(fields: [storeId], references: [id])
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+}
+
+model Coupon {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  discount    Float    // Percentage or Fixed amount
+  type        String   @default("PERCENTAGE") // PERCENTAGE, FIXED
+  storeId     String?  // If null, it's a global coupon
+  store       Store?   @relation(fields: [storeId], references: [id])
+  expiryDate  DateTime
+  isActive    Boolean  @default(true)
+}

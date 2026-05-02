@@ -1,65 +1,164 @@
-import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, Star, Clock, MapPin } from "lucide-react";
 
 export default function Home() {
+  const categories = [
+    { name: "Burgers", icon: "🍔", count: 12 },
+    { name: "Pizza", icon: "🍕", count: 8 },
+    { name: "Sushi", icon: "🍣", count: 5 },
+    { name: "Desserts", icon: "🍰", count: 15 },
+    { name: "Coffee", icon: "☕", count: 10 },
+    { name: "Healthy", icon: "🥗", count: 7 },
+  ];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="flex flex-col gap-16 pb-16">
+      {/* Hero Section */}
+      <section className="relative h-[600px] flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-background -z-10" />
+        <div className="container px-4 text-center">
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">
+            Satisfy Your Cravings <br />
+            <span className="text-primary">In One Click</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
+            Order from the best local restaurants and get your favorite meals delivered fresh and fast to your doorstep.
           </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link 
+              href="/stores" 
+              className="px-8 py-4 bg-primary text-primary-foreground rounded-full font-bold text-lg hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center gap-2"
+            >
+              Order Now <ArrowRight className="h-5 w-5" />
+            </Link>
+            <Link 
+              href="/become-partner" 
+              className="px-8 py-4 bg-secondary text-secondary-foreground rounded-full font-bold text-lg hover:bg-secondary/80 transition-all"
+            >
+              List Your Restaurant
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Categories */}
+      <section className="container mx-auto px-4">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-3xl font-bold">Popular Categories</h2>
+          <Link href="/categories" className="text-primary font-semibold hover:underline flex items-center gap-1">
+            View all <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
-      </main>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
+          {categories.map((cat) => (
+            <div 
+              key={cat.name}
+              className="group cursor-pointer p-6 rounded-2xl bg-muted/30 border border-transparent hover:border-primary/20 hover:bg-white hover:shadow-lg transition-all text-center"
+            >
+              <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">{cat.icon}</div>
+              <h3 className="font-bold text-lg">{cat.name}</h3>
+              <p className="text-sm text-muted-foreground">{cat.count} Restaurants</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* AI Recommendation */}
+      <section className="container mx-auto px-4">
+        <div className="bg-gradient-to-r from-purple-600 to-primary rounded-[2.5rem] p-1 gap-1">
+          <div className="bg-background rounded-[2.4rem] p-8 md:p-12">
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 animate-pulse">
+                <Star className="h-10 w-10 text-primary fill-primary" />
+              </div>
+              <div className="flex-1 text-center md:text-left space-y-2">
+                <h2 className="text-2xl md:text-3xl font-bold">Smart AI Recommendation</h2>
+                <p className="text-muted-foreground">Based on your taste, we recommend trying the <span className="font-bold text-primary">Spicy Zinger Burger</span> today!</p>
+              </div>
+              <button className="px-8 py-3 bg-primary text-primary-foreground rounded-xl font-bold hover:scale-105 transition-transform whitespace-nowrap">
+                Try it Now
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Stores Placeholder */}
+      <section className="container mx-auto px-4">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-3xl font-bold">Featured Restaurants</h2>
+          <div className="flex gap-2">
+            <span className="px-4 py-2 rounded-full border text-sm font-medium bg-primary/10 text-primary border-primary/20">All</span>
+            <span className="px-4 py-2 rounded-full border text-sm font-medium hover:bg-muted cursor-pointer transition-colors">Fast Food</span>
+            <span className="px-4 py-2 rounded-full border text-sm font-medium hover:bg-muted cursor-pointer transition-colors">Fine Dining</span>
+          </div>
+        </div>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-3xl border overflow-hidden group hover:shadow-2xl transition-all duration-500 bg-card">
+              <div className="h-56 bg-muted relative overflow-hidden">
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                 <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                    <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-white text-xs font-bold border border-white/20">
+                      Free Delivery
+                    </span>
+                    <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-lg text-sm font-bold">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span>4.8</span>
+                    </div>
+                 </div>
+              </div>
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-xl font-bold group-hover:text-primary transition-colors">The Burger Joint {i}</h3>
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <Clock className="h-4 w-4" />
+                    <span>25-35 min</span>
+                  </div>
+                </div>
+                <p className="text-muted-foreground text-sm mb-4">Gourmet Burgers, American, Sides</p>
+                <div className="flex items-center gap-1 text-sm font-medium">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  <span>2.5 miles away</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* App Promo */}
+      <section className="container mx-auto px-4 mb-8">
+        <div className="bg-primary rounded-[3rem] p-12 md:p-20 text-primary-foreground flex flex-col md:flex-row items-center gap-12 overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -ml-32 -mb-32" />
+          
+          <div className="flex-1 space-y-6 z-10 text-center md:text-left">
+            <h2 className="text-4xl md:text-5xl font-bold">Ready to Order?</h2>
+            <p className="text-xl opacity-90 max-w-lg">
+              Download our mobile app for exclusive deals, real-time tracking, and a faster ordering experience.
+            </p>
+            <div className="flex flex-wrap justify-center md:justify-start gap-4">
+              <button className="px-8 py-3 bg-white text-primary rounded-xl font-bold hover:scale-105 transition-transform">App Store</button>
+              <button className="px-8 py-3 bg-white text-primary rounded-xl font-bold hover:scale-105 transition-transform">Google Play</button>
+            </div>
+          </div>
+          <div className="flex-1 flex justify-center z-10">
+             <div className="w-64 h-[450px] bg-white/20 backdrop-blur-xl rounded-[2.5rem] border-4 border-white/30 shadow-2xl relative">
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-16 h-1 bg-white/40 rounded-full" />
+                <div className="mt-12 p-6 space-y-4">
+                  <div className="h-4 w-2/3 bg-white/20 rounded-full" />
+                  <div className="h-32 w-full bg-white/20 rounded-2xl" />
+                  <div className="space-y-2">
+                    <div className="h-3 w-full bg-white/20 rounded-full" />
+                    <div className="h-3 w-5/6 bg-white/20 rounded-full" />
+                  </div>
+                </div>
+             </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
