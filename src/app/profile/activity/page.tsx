@@ -6,7 +6,7 @@ import Link from "next/link";
 
 export default function ActivityPage() {
   const { data: session } = useSession();
-  const isStoreOwner = session?.user?.role === "STORE_OWNER";
+  const isStoreOwner = (session?.user as any)?.role === "STORE_OWNER";
 
   const activities = [
     { id: 1, type: "LOGIN", content: "Logged in from a new device in Dhaka, BD", time: "2 hours ago", icon: User, color: "text-blue-600", bg: "bg-blue-100" },

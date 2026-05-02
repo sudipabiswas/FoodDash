@@ -1,6 +1,6 @@
 import { Percent, Tag, Clock, ChevronRight, Store as StoreIcon } from "lucide-react";
 import Link from "next/link";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 
 export default async function OffersPage() {
   const activeCoupons = await prisma.coupon.findMany({

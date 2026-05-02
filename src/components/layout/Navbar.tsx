@@ -66,7 +66,7 @@ export default function Navbar() {
 
             {status === "authenticated" ? (
               <div className="flex items-center gap-3">
-                {session?.user?.role === "STORE_OWNER" || session?.user?.role === "ADMIN" ? (
+                {(session?.user as any)?.role === "STORE_OWNER" || (session?.user as any)?.role === "ADMIN" ? (
                   <Link 
                     href="/store-dashboard" 
                     className="hidden sm:flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 rounded-full text-sm font-medium transition-colors"
@@ -126,7 +126,7 @@ export default function Navbar() {
                     <p className="text-xs text-muted-foreground truncate">{session.user?.email}</p>
                   </div>
                 </div>
-                {session?.user?.role === "STORE_OWNER" || session?.user?.role === "ADMIN" ? (
+                {(session?.user as any)?.role === "STORE_OWNER" || (session?.user as any)?.role === "ADMIN" ? (
                   <Link href="/store-dashboard" className="flex items-center gap-2 text-sm font-medium p-2 hover:bg-muted rounded-md transition-colors">
                     <LayoutDashboard className="h-4 w-4" />
                     Store Dashboard

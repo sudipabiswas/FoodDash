@@ -32,7 +32,7 @@ export default function LoginPage() {
         const res = await fetch("/api/auth/session");
         const session = await res.json();
         
-        if (session?.user?.role === "STORE_OWNER" || session?.user?.role === "ADMIN") {
+        if ((session?.user as any)?.role === "STORE_OWNER" || (session?.user as any)?.role === "ADMIN") {
           router.push("/store-dashboard");
         } else {
           router.push("/profile");

@@ -61,7 +61,7 @@ export default function ProfilePage() {
 
   if (!session) return null;
 
-  const isStoreOwner = session.user?.role === "STORE_OWNER";
+  const isStoreOwner = (session.user as any)?.role === "STORE_OWNER";
 
   const previousOrders = [
     { id: "1001", store: "Burger King", date: "Oct 24, 2023", total: 45.99, status: "Delivered", items: ["Whopper", "Fries", "Coke"] },
@@ -81,7 +81,7 @@ export default function ProfilePage() {
                  <h2 className="text-2xl font-extrabold">{session.user?.name}</h2>
                  <p className="text-muted-foreground text-sm">{session.user?.email}</p>
                  <div className="mt-2 inline-block px-3 py-1 bg-primary/10 text-primary text-[10px] font-bold rounded-full uppercase tracking-widest">
-                   {session.user?.role}
+                   {(session.user as any)?.role}
                  </div>
               </div>
               <button onClick={() => setIsEditing(true)} className="w-full py-3 bg-muted rounded-xl text-sm font-bold hover:bg-muted/80 transition-colors">
