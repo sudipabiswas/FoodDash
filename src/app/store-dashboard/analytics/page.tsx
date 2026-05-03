@@ -119,7 +119,7 @@ export default function AnalyticsPage() {
                       paddingAngle={5}
                       dataKey="value"
                     >
-                      {categoryData.map((entry, index) => (
+                      {categoryData.map((entry: any, index: number) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>

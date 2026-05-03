@@ -15,7 +15,7 @@ export default async function OffersPage() {
     }
   });
 
-  const dbOffers = activeCoupons.map((coupon, index) => ({
+  const dbOffers = activeCoupons.map((coupon: any, index: number) => ({
     id: coupon.id,
     title: coupon.type === 'PERCENTAGE' ? `${coupon.discount}% OFF` : `$${coupon.discount.toFixed(2)} OFF`,
     description: `Special discount from ${coupon.store?.name || 'our partner'}. Apply this code at checkout to claim your deal!`,
