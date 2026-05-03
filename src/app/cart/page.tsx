@@ -52,7 +52,7 @@ export default function CartPage() {
       
       <div className="flex flex-col lg:flex-row gap-12">
         <div className="flex-1 space-y-6">
-          {items.map((item) => (
+          {items.map((item: any) => (
             <div key={item.id} className="flex items-center gap-6 p-6 rounded-2xl border bg-card">
               <div className="w-24 h-24 bg-muted rounded-xl flex-shrink-0" />
               <div className="flex-1">

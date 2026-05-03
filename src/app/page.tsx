@@ -50,7 +50,7 @@ export default function Home() {
           </Link>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
-          {categories.map((cat) => (
+          {categories.map((cat: any) => (
             <div 
               key={cat.name}
               className="group cursor-pointer p-6 rounded-2xl bg-muted/30 border border-transparent hover:border-primary/20 hover:bg-white hover:shadow-lg transition-all text-center"
@@ -95,7 +95,7 @@ export default function Home() {
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {[1, 2, 3].map((i) => (
+          {[1, 2, 3].map((i: number) => (
             <div key={i} className="rounded-3xl border overflow-hidden group hover:shadow-2xl transition-all duration-500 bg-card">
               <div className="h-56 bg-muted relative overflow-hidden">
                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />

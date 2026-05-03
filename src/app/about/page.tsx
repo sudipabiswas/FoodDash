@@ -88,7 +88,7 @@ export default function AboutPage() {
             </div>
             
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-               {values.map((val) => {
+               {values.map((val: any) => {
                  const Icon = val.icon;
                  return (
                    <div key={val.title} className="bg-background border rounded-[2rem] p-8 space-y-4 hover:shadow-xl transition-all">

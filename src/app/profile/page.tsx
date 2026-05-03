@@ -223,7 +223,7 @@ export default function ProfilePage() {
                      <h2 className="text-2xl font-bold">Recent Orders</h2>
                      <Link href="/profile/orders" className="text-primary text-sm font-bold hover:underline">View All</Link>
                   </div>
-                  {previousOrders.map((order) => (
+                  {previousOrders.map((order: any) => (
                     <div key={order.id} className="bg-card border rounded-3xl p-6 hover:shadow-md transition-shadow">
                        <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
                           <div className="flex items-center gap-4">
@@ -244,7 +244,7 @@ export default function ProfilePage() {
                        </div>
                        
                        <div className="flex flex-wrap gap-2 py-4 border-t border-b border-dashed mb-6">
-                          {order.items.map((item) => (
+                          {order.items.map((item: any) => (
                             <span key={item} className="px-3 py-1 bg-muted rounded-full text-xs font-medium">
                               {item}
                             </span>

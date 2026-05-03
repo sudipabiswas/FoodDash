@@ -13,7 +13,7 @@ export default function ActivityPage() {
     { id: 2, type: "ORDER", content: isStoreOwner ? "Received a new order #2241 from John Doe" : "Placed a new order #2241 at Burger King", time: "5 hours ago", icon: ShoppingBag, color: "text-green-600", bg: "bg-green-100" },
     { id: 3, type: "PROFILE", content: "Updated profile picture and phone number", time: "1 day ago", icon: User, color: "text-purple-600", bg: "bg-purple-100" },
     { id: 4, type: "STORE", content: "Updated store opening hours for the weekend", time: "2 days ago", icon: Store, color: "text-orange-600", bg: "bg-orange-100", hidden: !isStoreOwner },
-  ].filter(a => !a.hidden);
+  ].filter((a: any) => !a.hidden);
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-3xl">
@@ -29,7 +29,7 @@ export default function ActivityPage() {
 
       <div className="bg-card border rounded-[2.5rem] overflow-hidden shadow-sm">
         <div className="divide-y">
-           {activities.map((activity) => (
+           {activities.map((activity: any) => (
              <div key={activity.id} className="p-8 flex gap-6 hover:bg-muted/30 transition-colors">
                 <div className={`w-12 h-12 ${activity.bg} ${activity.color} rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm`}>
                    <activity.icon className="h-6 w-6" />
