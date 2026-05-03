@@ -104,6 +104,7 @@ model Review {
   store      Store    @relation(fields: [storeId], references: [id])
   rating     Int
   comment    String?
+  ownerReply String?
   createdAt  DateTime @default(now())
 }
 

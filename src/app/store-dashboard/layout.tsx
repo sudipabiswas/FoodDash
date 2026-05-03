@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Package, ShoppingBag, Settings, LogOut, User, BarChart3, Tag } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Settings, LogOut, User, BarChart3, Tag, MessageSquare } from "lucide-react";
 
 export default async function DashboardLayout({
   children,
@@ -33,6 +33,9 @@ export default async function DashboardLayout({
           </Link>
           <Link href="/store-dashboard/analytics" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-muted transition-colors font-medium text-muted-foreground">
             <BarChart3 className="h-5 w-5" /> Analytics
+          </Link>
+          <Link href="/store-dashboard/reviews" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-muted transition-colors font-medium text-muted-foreground">
+            <MessageSquare className="h-5 w-5" /> Reviews
           </Link>
           <Link href="/store-dashboard/products" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-muted transition-colors font-medium text-muted-foreground">
             <Package className="h-5 w-5" /> Products
