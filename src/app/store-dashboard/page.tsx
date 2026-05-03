@@ -92,6 +92,24 @@ export default function StoreDashboardPage() {
     exportToCSV(`Inventory_Report_${new Date().toISOString().split('T')[0]}.csv`, reportData);
   };
 
+  const handleAcceptOrder = async (orderId: string) => {
+    try {
+      const res = await fetch("/api/store/orders", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, status: "ACCEPTED" }),
+      });
+      if (res.ok) {
+        // Refresh data
+        const refreshRes = await fetch("/api/store/stats");
+        const json = await refreshRes.json();
+        if (refreshRes.ok) setData(json);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const stats = data?.stats || [];
   const icons = [DollarSign, ShoppingBag, Package, Star];
   const colors = ["text-emerald-600", "text-blue-600", "text-violet-600", "text-amber-600"];
@@ -117,9 +135,12 @@ export default function StoreDashboardPage() {
            >
               <Download className="h-4 w-4" /> Export Report
            </button>
-           <button className="flex items-center gap-2 px-5 py-2 bg-primary text-primary-foreground rounded-2xl text-sm font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+           <Link 
+             href="/store-dashboard/products"
+             className="flex items-center gap-2 px-5 py-2 bg-primary text-primary-foreground rounded-2xl text-sm font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+           >
               <Plus className="h-4 w-4" /> New Product
-           </button>
+           </Link>
         </div>
       </div>
 
@@ -243,7 +264,10 @@ export default function StoreDashboardPage() {
                              <p className="font-black text-lg text-primary">${order.totalPrice.toFixed(2)}</p>
                              <p className="text-[10px] text-muted-foreground font-bold">PREPAID</p>
                           </div>
-                          <button className="px-6 py-2 bg-foreground text-background rounded-xl text-xs font-bold hover:scale-105 transition-transform active:scale-95">
+                          <button 
+                            onClick={() => handleAcceptOrder(order.id)}
+                            className="px-6 py-2 bg-foreground text-background rounded-xl text-xs font-bold hover:scale-105 transition-transform active:scale-95"
+                          >
                              Accept Order
                           </button>
                        </div>
