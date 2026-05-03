@@ -48,7 +48,7 @@ export default async function StoreMenuPage(props: { params: Promise<{ id: strin
           {/* Categories Sidebar */}
           <aside className="lg:w-64 space-y-2 sticky top-24 h-fit">
             <h2 className="text-xl font-bold mb-4">Categories</h2>
-            {store.categories.map((cat) => (
+            {store.categories.map((cat: any) => (
               <a 
                 key={cat.id} 
                 href={`#${cat.id}`}
@@ -61,11 +61,11 @@ export default async function StoreMenuPage(props: { params: Promise<{ id: strin
 
           {/* Menu Items */}
           <div className="flex-1 space-y-12">
-            {store.categories.map((category) => (
+            {store.categories.map((category: any) => (
               <section key={category.id} id={category.id} className="scroll-mt-24">
                 <h3 className="text-2xl font-bold mb-6 pb-2 border-b">{category.name}</h3>
                 <div className="grid sm:grid-cols-2 gap-6">
-                  {category.products.map((product) => (
+                  {category.products.map((product: any) => (
                     <div key={product.id} className="flex gap-4 p-4 rounded-2xl border bg-card hover:shadow-md transition-shadow">
                       <div className="flex-1 flex flex-col">
                         <h4 className="font-bold text-lg">{product.name}</h4>

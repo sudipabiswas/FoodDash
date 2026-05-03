@@ -62,7 +62,7 @@ export default async function StoresPage(props: {
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {stores.map((store) => (
+          {stores.map((store: any) => (
             <Link key={store.id} href={`/stores/${store.id}`} className="block">
               <div className="rounded-3xl border overflow-hidden group hover:shadow-2xl transition-all duration-500 bg-card">
                 <div className="h-48 bg-muted relative overflow-hidden">
