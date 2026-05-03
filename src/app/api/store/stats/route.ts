@@ -112,11 +112,13 @@ export async function GET(req: Request) {
     where: { storeId: store.id },
     take: 3,
     orderBy: {
-      createdAt: 'desc'
+      orderItems: {
+        _count: 'desc'
+      }
     },
     include: {
       _count: {
-        select: { items: true }
+        select: { orderItems: true }
       }
     }
   });

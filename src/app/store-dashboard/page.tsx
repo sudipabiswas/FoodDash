@@ -183,7 +183,7 @@ export default function StoreDashboardPage() {
                        </div>
                        <div className="flex-1 min-w-0">
                           <p className="font-bold text-sm truncate">{item.name}</p>
-                          <p className="text-xs text-muted-foreground">{item._count.items} units sold</p>
+                          <p className="text-xs text-muted-foreground">{item._count.orderItems} units sold</p>
                        </div>
                        <div className="text-right">
                           <p className="font-bold text-sm text-primary">${item.price}</p>
