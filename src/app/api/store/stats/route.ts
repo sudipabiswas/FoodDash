@@ -55,11 +55,11 @@ export async function GET(req: Request) {
     select: { rating: true }
   });
   const avgRating = reviews.length > 0 
-    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+    ? (reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : "0.0";
 
-  const totalRevenue = currentOrders.reduce((sum, order) => sum + order.totalPrice, 0);
-  const prevRevenue = prevOrders.reduce((sum, order) => sum + order.totalPrice, 0);
+  const totalRevenue = currentOrders.reduce((sum: number, order: any) => sum + order.totalPrice, 0);
+  const prevRevenue = prevOrders.reduce((sum: number, order: any) => sum + order.totalPrice, 0);
   
   const revenueGrowth = prevRevenue === 0 ? (totalRevenue > 0 ? "+100%" : "0%") : 
     `${(((totalRevenue - prevRevenue) / prevRevenue) * 100).toFixed(0)}%`;
@@ -90,7 +90,7 @@ export async function GET(req: Request) {
       name: range === "monthly" 
         ? new Date(date).toLocaleDateString("en-US", { day: "numeric", month: "short" })
         : new Date(date).toLocaleDateString("en-US", { weekday: "short" }),
-      sales: dayOrders.reduce((sum, o) => sum + o.totalPrice, 0),
+      sales: dayOrders.reduce((sum: number, o: any) => sum + o.totalPrice, 0),
     };
   });
 
