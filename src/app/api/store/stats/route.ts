@@ -114,6 +114,18 @@ export async function GET(req: Request) {
        successRate: `${successRate.toFixed(1)}%`
     },
     chartData,
-    recentReviews
+    recentReviews,
+    revenueDetails: currentOrders.map((o: any) => ({
+       id: o.id,
+       date: o.createdAt,
+       customer: o.customerId, // Could join for name if needed
+       amount: o.totalPrice,
+       status: o.status
+    })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    periodSummary: {
+       daily: currentOrders.filter(o => new Date(o.createdAt).toDateString() === new Date().toDateString()).reduce((sum, o) => sum + o.totalPrice, 0),
+       weekly: currentOrders.reduce((sum, o) => sum + o.totalPrice, 0),
+       monthly: totalRevenue // assuming range handles this
+    }
   });
 }

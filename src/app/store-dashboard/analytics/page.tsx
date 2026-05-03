@@ -40,6 +40,29 @@ export default function AnalyticsPage() {
     }
   };
 
+  const downloadReport = (format: string) => {
+    if (!data?.revenueDetails) return;
+    
+    const headers = ["Order ID", "Date", "Status", "Revenue"];
+    const rows = data.revenueDetails.map((item: any) => [
+      item.id,
+      new Date(item.date).toLocaleDateString(),
+      item.status,
+      item.amount.toFixed(2)
+    ]);
+
+    const content = [headers, ...rows].map(row => row.join(",")).join("\n");
+    const blob = new Blob([content], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `revenue_report_${range}_${new Date().toISOString().split('T')[0]}.${format === 'xlsx' ? 'csv' : format}`);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
   const categoryData = [
@@ -129,6 +152,85 @@ export default function AnalyticsPage() {
               </ResponsiveContainer>
            </div>
         </div>
+      </div>
+
+      <div className="grid sm:grid-cols-4 gap-6">
+         <div className="p-6 bg-card border rounded-[2rem] space-y-2">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Today's Revenue</p>
+            <h3 className="text-2xl font-extrabold">${data?.periodSummary?.daily?.toFixed(2) || "0.00"}</h3>
+         </div>
+         <div className="p-6 bg-card border rounded-[2rem] space-y-2">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Weekly Revenue</p>
+            <h3 className="text-2xl font-extrabold">${data?.periodSummary?.weekly?.toFixed(2) || "0.00"}</h3>
+         </div>
+         <div className="p-6 bg-card border rounded-[2rem] space-y-2">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Monthly Revenue</p>
+            <h3 className="text-2xl font-extrabold">${data?.periodSummary?.monthly?.toFixed(2) || "0.00"}</h3>
+         </div>
+         <div className="p-6 bg-primary text-primary-foreground rounded-[2rem] space-y-4 flex flex-col justify-center">
+            <p className="text-xs font-bold uppercase tracking-widest opacity-80">Reports</p>
+            <div className="flex gap-2">
+               <button 
+                 onClick={() => downloadReport('csv')}
+                 className="flex-1 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-[10px] font-bold transition-colors"
+               >
+                 CSV
+               </button>
+               <button 
+                 onClick={() => downloadReport('xlsx')}
+                 className="flex-1 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-[10px] font-bold transition-colors"
+               >
+                 XLSX
+               </button>
+               <button 
+                 onClick={() => window.print()}
+                 className="flex-1 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-[10px] font-bold transition-colors"
+               >
+                 PDF
+               </button>
+            </div>
+         </div>
+      </div>
+
+      <div className="bg-card border rounded-[2.5rem] overflow-hidden">
+         <div className="p-8 border-b bg-muted/30 flex justify-between items-center">
+            <h2 className="text-xl font-bold">Revenue Breakdown by Order</h2>
+            <DollarSign className="h-5 w-5 text-primary" />
+         </div>
+         <div className="overflow-x-auto">
+            <table className="w-full text-left">
+               <thead>
+                  <tr className="border-b">
+                     <th className="px-8 py-4 text-xs font-bold uppercase text-muted-foreground">Order ID</th>
+                     <th className="px-8 py-4 text-xs font-bold uppercase text-muted-foreground">Date</th>
+                     <th className="px-8 py-4 text-xs font-bold uppercase text-muted-foreground">Status</th>
+                     <th className="px-8 py-4 text-xs font-bold uppercase text-muted-foreground text-right">Revenue</th>
+                  </tr>
+               </thead>
+               <tbody className="divide-y">
+                  {data?.revenueDetails?.length === 0 ? (
+                    <tr>
+                       <td colSpan={4} className="px-8 py-12 text-center text-muted-foreground">No revenue data available.</td>
+                    </tr>
+                  ) : (
+                    data?.revenueDetails?.map((item: any) => (
+                      <tr key={item.id} className="hover:bg-muted/20 transition-colors">
+                         <td className="px-8 py-4 font-mono text-xs">#{item.id.slice(-8).toUpperCase()}</td>
+                         <td className="px-8 py-4 text-sm text-muted-foreground">{new Date(item.date).toLocaleDateString()}</td>
+                         <td className="px-8 py-4">
+                            <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${
+                               item.status === 'DELIVERED' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                            }`}>
+                               {item.status}
+                            </span>
+                         </td>
+                         <td className="px-8 py-4 text-right font-bold text-primary">${item.amount.toFixed(2)}</td>
+                      </tr>
+                    ))
+                  )}
+               </tbody>
+            </table>
+         </div>
       </div>
 
       <div className="grid sm:grid-cols-3 gap-6">
