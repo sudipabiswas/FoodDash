@@ -371,5 +371,6 @@ function ReplySection({ reviewId, onReply }: { reviewId: string, onReply: any })
              Send Reply
           </button>
        </div>
+    </div>
   );
 }
