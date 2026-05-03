@@ -112,9 +112,7 @@ export async function GET(req: Request) {
     where: { storeId: store.id },
     take: 3,
     orderBy: {
-      items: {
-        _count: 'desc'
-      }
+      createdAt: 'desc'
     },
     include: {
       _count: {
