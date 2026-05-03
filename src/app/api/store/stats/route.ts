@@ -71,10 +71,10 @@ export async function GET(req: Request) {
   const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
   
   // Unique customers in current period
-  const uniqueCustomers = new Set(currentOrders.map(o => o.customerId)).size;
+  const uniqueCustomers = new Set(currentOrders.map((o: any) => o.customerId)).size;
   
   // Success rate (Delivered / Total)
-  const deliveredOrders = currentOrders.filter(o => o.status === "DELIVERED").length;
+  const deliveredOrders = currentOrders.filter((o: any) => o.status === "DELIVERED").length;
   const successRate = totalOrders > 0 ? (deliveredOrders / totalOrders) * 100 : 100;
 
   // Group orders by day for chart
@@ -84,8 +84,8 @@ export async function GET(req: Request) {
     return d.toISOString().split("T")[0];
   });
 
-  const chartData = days.map(date => {
-    const dayOrders = currentOrders.filter(o => o.createdAt.toISOString().split("T")[0] === date);
+  const chartData = days.map((date: string) => {
+    const dayOrders = currentOrders.filter((o: any) => o.createdAt.toISOString().split("T")[0] === date);
     return {
       name: range === "monthly" 
         ? new Date(date).toLocaleDateString("en-US", { day: "numeric", month: "short" })
