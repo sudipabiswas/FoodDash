@@ -81,76 +81,99 @@ export default function StoreDashboardPage() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-card border rounded-3xl p-8 space-y-6">
-           <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Revenue Trends</h2>
-              <div className="flex items-center gap-2 px-3 py-1 bg-muted rounded-lg text-xs font-bold">
-                 <TrendingUp className="h-3.5 w-3.5 text-primary" />
-                 Last 7 Days
+        <div className="lg:col-span-2 space-y-8">
+           {/* Revenue Chart */}
+           <div className="bg-card border rounded-3xl p-8 space-y-6">
+              <div className="flex items-center justify-between mb-4">
+                 <h2 className="text-xl font-bold">Revenue Trends</h2>
+                 <div className="flex items-center gap-2 px-3 py-1 bg-muted rounded-lg text-xs font-bold">
+                    <TrendingUp className="h-3.5 w-3.5 text-primary" />
+                    Last 7 Days
+                 </div>
+              </div>
+              <div className="h-[300px] w-full">
+                 <ResponsiveContainer width="100%" height="100%">
+                   <AreaChart data={data?.chartData || []}>
+                     <defs>
+                       <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                         <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.1}/>
+                         <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
+                       </linearGradient>
+                     </defs>
+                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                     <XAxis 
+                       dataKey="name" 
+                       axisLine={false} 
+                       tickLine={false} 
+                       tick={{fill: 'var(--muted-foreground)', fontSize: 12}} 
+                       dy={10}
+                     />
+                     <YAxis 
+                       axisLine={false} 
+                       tickLine={false} 
+                       tick={{fill: 'var(--muted-foreground)', fontSize: 12}} 
+                     />
+                     <Tooltip 
+                       contentStyle={{borderRadius: '1rem', border: '1px solid var(--border)', backgroundColor: 'var(--card)'}}
+                     />
+                     <Area 
+                       type="monotone" 
+                       dataKey="sales" 
+                       stroke="var(--primary)" 
+                       strokeWidth={3}
+                       fillOpacity={1} 
+                       fill="url(#colorSales)" 
+                     />
+                   </AreaChart>
+                 </ResponsiveContainer>
               </div>
            </div>
-           <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={data?.chartData || []}>
-                  <defs>
-                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                  <XAxis 
-                    dataKey="name" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{fill: 'var(--muted-foreground)', fontSize: 12}} 
-                    dy={10}
-                  />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{fill: 'var(--muted-foreground)', fontSize: 12}} 
-                  />
-                  <Tooltip 
-                    contentStyle={{borderRadius: '1rem', border: '1px solid var(--border)', backgroundColor: 'var(--card)'}}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="sales" 
-                    stroke="var(--primary)" 
-                    strokeWidth={3}
-                    fillOpacity={1} 
-                    fill="url(#colorSales)" 
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+
+           {/* Detailed Revenue Metrics */}
+           <div className="grid sm:grid-cols-3 gap-6">
+              <div className="bg-card border rounded-3xl p-6 space-y-2">
+                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Avg. Order Value</p>
+                 <h4 className="text-2xl font-bold">{data?.detailedStats?.avgOrderValue}</h4>
+              </div>
+              <div className="bg-card border rounded-3xl p-6 space-y-2">
+                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">New Customers</p>
+                 <h4 className="text-2xl font-bold">{data?.detailedStats?.newCustomers}</h4>
+              </div>
+              <div className="bg-card border rounded-3xl p-6 space-y-2">
+                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Success Rate</p>
+                 <h4 className="text-2xl font-bold">{data?.detailedStats?.successRate}</h4>
+              </div>
            </div>
         </div>
 
-        <div className="bg-card border rounded-3xl p-8 space-y-6">
-           <h2 className="text-xl font-bold">Popular Items</h2>
+        <div className="bg-card border rounded-3xl p-8 space-y-6 h-fit">
+           <h2 className="text-xl font-bold">Recent Reviews</h2>
            <div className="space-y-6">
-              {[1, 2, 3].map((i: number) => (
-                <div key={i} className="flex items-center gap-4">
-                   <div className="w-16 h-16 rounded-2xl bg-muted overflow-hidden flex items-center justify-center">
-                      <Package className="h-8 w-8 text-muted-foreground/50" />
-                   </div>
-                   <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm truncate">Premium Item {i}</p>
-                      <p className="text-xs text-muted-foreground">High performance</p>
-                   </div>
-                   <div className="text-right">
-                      <p className="font-bold text-sm">Top Seller</p>
-                      <p className="text-[10px] text-green-600 font-bold">+5.2%</p>
-                   </div>
+              {data?.recentReviews?.length === 0 ? (
+                <div className="py-12 text-center space-y-2">
+                   <Star className="h-8 w-8 text-muted-foreground mx-auto opacity-20" />
+                   <p className="text-sm text-muted-foreground">No reviews yet.</p>
                 </div>
-              ))}
+              ) : (
+                data?.recentReviews?.map((review: any) => (
+                  <div key={review.id} className="space-y-2">
+                     <div className="flex items-center justify-between">
+                        <p className="font-bold text-sm">{review.customer?.name}</p>
+                        <div className="flex items-center gap-1 text-orange-500">
+                           <Star className="h-3 w-3 fill-current" />
+                           <span className="text-xs font-bold">{review.rating}</span>
+                        </div>
+                     </div>
+                     <p className="text-xs text-muted-foreground line-clamp-2 italic">"{review.comment}"</p>
+                  </div>
+                ))
+              )}
            </div>
            <Link 
              href="/store-dashboard/analytics" 
              className="inline-block w-full py-3 border rounded-2xl text-sm font-bold hover:bg-muted transition-colors mt-4 text-center"
            >
-              View Analytics
+              View All Reviews
            </Link>
         </div>
       </div>

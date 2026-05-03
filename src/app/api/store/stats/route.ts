@@ -94,9 +94,16 @@ export async function GET(req: Request) {
     };
   });
 
+  const recentReviews = await prisma.review.findMany({
+    where: { storeId: store.id },
+    take: 5,
+    orderBy: { createdAt: "desc" },
+    include: { customer: { select: { name: true } } }
+  });
+
   return NextResponse.json({
     stats: [
-      { name: "Total Revenue", value: `$${totalRevenue.toFixed(2)}`, growth: revenueGrowth.startsWith("-") ? revenueGrowth : `+${revenueGrowth}`, link: "/store-dashboard/orders" },
+      { name: "Total Revenue", value: `$${totalRevenue.toFixed(2)}`, growth: revenueGrowth.startsWith("-") ? revenueGrowth : `+${revenueGrowth}`, link: "/store-dashboard/analytics" },
       { name: "Total Orders", value: totalOrders.toString(), growth: ordersGrowth.startsWith("-") ? ordersGrowth : `+${ordersGrowth}`, link: "/store-dashboard/orders" },
       { name: "Active Products", value: products.toString(), growth: "Stable", link: "/store-dashboard/products" },
       { name: "Customer Rating", value: avgRating, growth: `(${reviews.length} reviews)`, link: "/store-dashboard/analytics" },
@@ -106,6 +113,7 @@ export async function GET(req: Request) {
        newCustomers: uniqueCustomers.toString(),
        successRate: `${successRate.toFixed(1)}%`
     },
-    chartData
+    chartData,
+    recentReviews
   });
 }
