@@ -101,6 +101,28 @@ export async function GET(req: Request) {
     include: { customer: { select: { name: true } } }
   });
 
+  const recentOrders = await prisma.order.findMany({
+    where: { storeId: store.id },
+    take: 5,
+    orderBy: { createdAt: "desc" },
+    include: { customer: { select: { name: true } } }
+  });
+
+  const popularItems = await prisma.product.findMany({
+    where: { storeId: store.id },
+    take: 3,
+    orderBy: {
+      items: {
+        _count: 'desc'
+      }
+    },
+    include: {
+      _count: {
+        select: { items: true }
+      }
+    }
+  });
+
   return NextResponse.json({
     stats: [
       { name: "Total Revenue", value: `$${totalRevenue.toFixed(2)}`, growth: revenueGrowth.startsWith("-") ? revenueGrowth : `+${revenueGrowth}`, link: "/store-dashboard/analytics" },
@@ -115,17 +137,19 @@ export async function GET(req: Request) {
     },
     chartData,
     recentReviews,
+    recentOrders,
+    popularItems,
     revenueDetails: currentOrders.map((o: any) => ({
        id: o.id,
        date: o.createdAt,
-       customer: o.customerId, // Could join for name if needed
+       customer: o.customerId, 
        amount: o.totalPrice,
        status: o.status
     })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     periodSummary: {
        daily: currentOrders.filter(o => new Date(o.createdAt).toDateString() === new Date().toDateString()).reduce((sum, o) => sum + o.totalPrice, 0),
        weekly: currentOrders.reduce((sum, o) => sum + o.totalPrice, 0),
-       monthly: totalRevenue // assuming range handles this
+       monthly: totalRevenue 
     }
   });
 }
