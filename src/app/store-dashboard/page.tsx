@@ -130,7 +130,7 @@ export default function StoreDashboardPage() {
         <div className="bg-card border rounded-3xl p-8 space-y-6">
            <h2 className="text-xl font-bold">Popular Items</h2>
            <div className="space-y-6">
-              {[1, 2, 3].map((i) => (
+              {[1, 2, 3].map((i: number) => (
                 <div key={i} className="flex items-center gap-4">
                    <div className="w-16 h-16 rounded-2xl bg-muted overflow-hidden flex items-center justify-center">
                       <Package className="h-8 w-8 text-muted-foreground/50" />

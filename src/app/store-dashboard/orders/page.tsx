@@ -67,7 +67,7 @@ export default function StoreOrdersPage() {
         </div>
         
         <div className="flex items-center gap-2 bg-muted p-1 rounded-xl">
-           {["ALL", "PENDING", "ACCEPTED", "DELIVERED"].map((f) => (
+           {["ALL", "PENDING", "ACCEPTED", "DELIVERED"].map((f: string) => (
              <button
                key={f}
                onClick={() => setFilter(f)}
