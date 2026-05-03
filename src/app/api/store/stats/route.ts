@@ -106,7 +106,7 @@ export async function GET(req: Request) {
       { name: "Total Revenue", value: `$${totalRevenue.toFixed(2)}`, growth: revenueGrowth.startsWith("-") ? revenueGrowth : `+${revenueGrowth}`, link: "/store-dashboard/analytics" },
       { name: "Total Orders", value: totalOrders.toString(), growth: ordersGrowth.startsWith("-") ? ordersGrowth : `+${ordersGrowth}`, link: "/store-dashboard/orders" },
       { name: "Active Products", value: products.toString(), growth: "Stable", link: "/store-dashboard/products" },
-      { name: "Customer Rating", value: avgRating, growth: `(${reviews.length} reviews)`, link: "/store-dashboard/reviews" },
+      { name: "Customer Rating", value: avgRating, growth: `(${reviews.length} reviews)`, link: "/store-dashboard/analytics" },
     ],
     detailedStats: {
        avgOrderValue: `$${avgOrderValue.toFixed(2)}`,
