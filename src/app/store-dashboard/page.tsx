@@ -71,12 +71,12 @@ export default function StoreDashboardPage() {
   };
 
   const handleExportRevenue = () => {
-    if (!data?.revenueDetails) return;
-    const reportData = data.revenueDetails.map((r: any) => ({
+    if (!data?.recentOrders) return;
+    const reportData = data.recentOrders.map((r: any) => ({
       OrderID: r.id,
-      Date: new Date(r.date).toLocaleDateString(),
+      Date: new Date(r.createdAt).toLocaleDateString(),
       Status: r.status,
-      Revenue: r.amount.toFixed(2)
+      Revenue: r.totalPrice.toFixed(2)
     }));
     exportToCSV(`Revenue_Report_${new Date().toISOString().split('T')[0]}.csv`, reportData);
   };
@@ -227,7 +227,7 @@ export default function StoreDashboardPage() {
                  <Link href="/store-dashboard/orders" className="text-xs font-bold text-primary hover:underline">Manage All Orders →</Link>
               </div>
               <div className="grid gap-4">
-                 {data?.revenueDetails?.slice(0, 3).map((order: any) => (
+                 {data?.recentOrders?.slice(0, 3).map((order: any) => (
                     <div key={order.id} className="group flex items-center justify-between p-6 bg-muted/30 rounded-3xl border border-transparent hover:border-primary/20 hover:bg-card transition-all">
                        <div className="flex items-center gap-5">
                           <div className="w-14 h-14 bg-white dark:bg-zinc-800 rounded-2xl flex items-center justify-center shadow-sm border">
@@ -235,12 +235,12 @@ export default function StoreDashboardPage() {
                           </div>
                           <div>
                              <p className="font-bold">Order #{order.id.slice(-6).toUpperCase()}</p>
-                             <p className="text-xs text-muted-foreground">{new Date(order.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} • {order.status}</p>
+                             <p className="text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} • {order.status}</p>
                           </div>
                        </div>
                        <div className="flex items-center gap-6">
                           <div className="text-right">
-                             <p className="font-black text-lg text-primary">${order.amount.toFixed(2)}</p>
+                             <p className="font-black text-lg text-primary">${order.totalPrice.toFixed(2)}</p>
                              <p className="text-[10px] text-muted-foreground font-bold">PREPAID</p>
                           </div>
                           <button className="px-6 py-2 bg-foreground text-background rounded-xl text-xs font-bold hover:scale-105 transition-transform active:scale-95">
