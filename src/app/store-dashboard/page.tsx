@@ -51,6 +51,47 @@ export default function StoreDashboardPage() {
     );
   }
 
+  const exportToCSV = (filename: string, rows: any[]) => {
+    if (!rows.length) return;
+    const headers = Object.keys(rows[0]);
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => headers.map(fieldName => JSON.stringify(row[fieldName])).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportRevenue = () => {
+    if (!data?.revenueDetails) return;
+    const reportData = data.revenueDetails.map((r: any) => ({
+      OrderID: r.id,
+      Date: new Date(r.date).toLocaleDateString(),
+      Status: r.status,
+      Revenue: r.amount.toFixed(2)
+    }));
+    exportToCSV(`Revenue_Report_${new Date().toISOString().split('T')[0]}.csv`, reportData);
+  };
+
+  const handleExportInventory = () => {
+    if (!data?.popularItems) return;
+    const reportData = data.popularItems.map((item: any) => ({
+      ProductName: item.name,
+      Price: item.price,
+      Orders: item._count.orderItems,
+      CreatedAt: new Date(item.createdAt).toLocaleDateString()
+    }));
+    exportToCSV(`Inventory_Report_${new Date().toISOString().split('T')[0]}.csv`, reportData);
+  };
+
   const stats = data?.stats || [];
   const icons = [DollarSign, ShoppingBag, Package, Star];
   const colors = ["text-emerald-600", "text-blue-600", "text-violet-600", "text-amber-600"];
@@ -70,7 +111,10 @@ export default function StoreDashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-           <button className="flex items-center gap-2 px-4 py-2 bg-card border rounded-2xl text-sm font-bold hover:shadow-md transition-all">
+           <button 
+             onClick={handleExportRevenue}
+             className="flex items-center gap-2 px-4 py-2 bg-card border rounded-2xl text-sm font-bold hover:shadow-md transition-all"
+           >
               <Download className="h-4 w-4" /> Export Report
            </button>
            <button className="flex items-center gap-2 px-5 py-2 bg-primary text-primary-foreground rounded-2xl text-sm font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
@@ -237,7 +281,10 @@ export default function StoreDashboardPage() {
                     </div>
                  ))}
               </div>
-              <button className="w-full py-4 bg-muted/50 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-muted transition-colors">
+              <button 
+                onClick={handleExportInventory}
+                className="w-full py-4 bg-muted/50 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-muted transition-colors"
+              >
                  Full Inventory Reports
               </button>
            </div>
