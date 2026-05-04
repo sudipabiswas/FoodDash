@@ -5,7 +5,7 @@ import { ShoppingCart, User, Search, Menu, LogOut, LayoutDashboard } from "lucid
 import { useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -13,8 +13,10 @@ export default function Navbar() {
   const { totalItems } = useCart();
   const { data: session, status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleSearch = (e: React.FormEvent) => {
+
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/stores?search=${encodeURIComponent(searchQuery.trim())}`);
@@ -46,23 +48,28 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-4">
-            <form onSubmit={handleSearch} className="hidden sm:flex items-center relative group">
-              <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
-              <input
-                type="search"
-                placeholder="Search food or restaurants..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-9 w-64 rounded-full border bg-muted/50 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-              />
-            </form>
-            
-            <Link href="/cart" className="relative p-2 hover:bg-muted rounded-full transition-colors">
-              <ShoppingCart className="h-5 w-5" />
-              <span className="absolute top-0 right-0 h-4 w-4 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full">
-                {totalItems}
-              </span>
-            </Link>
+            {!pathname?.startsWith("/store-dashboard") && (
+              <>
+                <form onSubmit={handleSearch} className="hidden sm:flex items-center relative group">
+                  <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="search"
+                    placeholder="Search food or restaurants..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="h-9 w-64 rounded-full border bg-muted/50 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  />
+                </form>
+                
+                <Link href="/cart" className="relative p-2 hover:bg-muted rounded-full transition-colors">
+                  <ShoppingCart className="h-5 w-5" />
+                  <span className="absolute top-0 right-0 h-4 w-4 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full">
+                    {totalItems}
+                  </span>
+                </Link>
+              </>
+            )}
+
 
             {status === "authenticated" ? (
               <div className="flex items-center gap-3">
@@ -152,18 +159,21 @@ export default function Navbar() {
             )}
           </div>
 
-          <form onSubmit={handleSearch} className="relative pt-2">
-            <Search className="absolute left-2.5 top-5 h-4 w-4 text-muted-foreground" />
-            <input
-              type="search"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-10 w-full rounded-md border bg-muted/50 pl-9 pr-4 text-sm"
-            />
-          </form>
+          {!pathname?.startsWith("/store-dashboard") && (
+            <form onSubmit={handleSearch} className="relative pt-2">
+              <Search className="absolute left-2.5 top-5 h-4 w-4 text-muted-foreground" />
+              <input
+                type="search"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-10 w-full rounded-md border bg-muted/50 pl-9 pr-4 text-sm"
+              />
+            </form>
+          )}
         </div>
       )}
     </nav>
   );
 }
+
