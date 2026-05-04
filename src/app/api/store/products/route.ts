@@ -43,7 +43,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { name, description, price, categoryId, storeId } = await req.json();
+    const { name, description, price, categoryId, storeId, image } = await req.json();
 
     const product = await prisma.product.create({
       data: {
@@ -52,6 +52,7 @@ export async function POST(req: Request) {
         price: parseFloat(price),
         categoryId,
         storeId,
+        image: image || null,
       },
     });
 
@@ -60,6 +61,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
 
 export async function DELETE(req: Request) {
   const session = await auth();
