@@ -128,7 +128,8 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     stats: [
-      { name: "Total Revenue", value: `$${totalRevenue.toFixed(2)}`, growth: revenueGrowth.startsWith("-") ? revenueGrowth : `+${revenueGrowth}`, link: "/store-dashboard/analytics" },
+      { name: "Total Revenue", value: `$${totalRevenue.toFixed(2)}`, growth: revenueGrowth.startsWith("-") ? revenueGrowth : `+${revenueGrowth}`, link: "/store-dashboard/revenue" },
+
       { name: "Total Orders", value: totalOrders.toString(), growth: ordersGrowth.startsWith("-") ? ordersGrowth : `+${ordersGrowth}`, link: "/store-dashboard/orders" },
       { name: "Active Products", value: products.toString(), growth: "Stable", link: "/store-dashboard/products" },
       { name: "Customer Rating", value: avgRating, growth: `(${reviews.length} reviews)`, link: "/store-dashboard/reviews" },
