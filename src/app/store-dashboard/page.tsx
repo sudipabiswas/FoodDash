@@ -155,9 +155,10 @@ export default function StoreDashboardPage() {
         {stats.map((stat: any, i: number) => {
           const Icon = icons[i] || TrendingUp;
           return (
-            <div 
+            <Link 
               key={stat.name} 
-              className="group relative p-6 bg-card border rounded-[2.5rem] overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+              href={stat.link || "#"}
+              className="group relative p-6 bg-card border rounded-[2.5rem] overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 block"
             >
               <div className={`absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 ${bgs[i]} opacity-10 rounded-full group-hover:scale-150 transition-transform duration-500`} />
               
@@ -177,7 +178,7 @@ export default function StoreDashboardPage() {
                    </div>
                 </div>
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
