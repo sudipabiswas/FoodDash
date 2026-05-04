@@ -7,7 +7,10 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const range = searchParams.get("range") || "weekly"; // weekly or monthly
 
+  console.log("Stats API Session:", JSON.stringify(session));
+
   if (!session || (session.user as any).role !== "STORE_OWNER") {
+    console.error("Stats API Unauthorized:", session?.user?.email, (session?.user as any)?.role);
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

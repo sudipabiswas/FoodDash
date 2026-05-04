@@ -71,7 +71,10 @@ export default function StoreDashboardPage() {
   };
 
   const handleExportRevenue = () => {
-    if (!data?.recentOrders) return;
+    if (!data?.recentOrders || data.recentOrders.length === 0) {
+      alert("No revenue data available to export.");
+      return;
+    }
     const reportData = data.recentOrders.map((r: any) => ({
       OrderID: r.id,
       Date: new Date(r.createdAt).toLocaleDateString(),
@@ -82,7 +85,10 @@ export default function StoreDashboardPage() {
   };
 
   const handleExportInventory = () => {
-    if (!data?.popularItems) return;
+    if (!data?.popularItems || data.popularItems.length === 0) {
+      alert("No inventory data available to export.");
+      return;
+    }
     const reportData = data.popularItems.map((item: any) => ({
       ProductName: item.name,
       Price: item.price,
@@ -95,7 +101,7 @@ export default function StoreDashboardPage() {
   const handleAcceptOrder = async (orderId: string) => {
     try {
       const res = await fetch("/api/store/orders", {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orderId, status: "ACCEPTED" }),
       });

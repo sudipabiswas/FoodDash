@@ -62,9 +62,108 @@ async function main() {
     ],
   });
 
+  // Create Customers
+  const customer1 = await prisma.user.create({
+    data: {
+      email: "alex@example.com",
+      password: hashedPassword,
+      name: "Alex Johnson",
+      role: "CUSTOMER",
+    },
+  });
+
+  const customer2 = await prisma.user.create({
+    data: {
+      email: "sarah@example.com",
+      password: hashedPassword,
+      name: "Sarah Miller",
+      role: "CUSTOMER",
+    },
+  });
+
+  // Get Products for Orders
+  const dbProducts = await prisma.product.findMany({ where: { storeId: store.id } });
+
+  // Create Orders
+  const order1 = await prisma.order.create({
+    data: {
+      customerId: customer1.id,
+      storeId: store.id,
+      totalPrice: 18.97,
+      status: "DELIVERED",
+      deliveryAddress: "123 Maple St, Springfield",
+      items: {
+        create: [
+          { productId: dbProducts[0].id, quantity: 2, price: 6.99 },
+          { productId: dbProducts[1].id, quantity: 1, price: 4.99 },
+        ]
+      }
+    }
+  });
+
+  const order2 = await prisma.order.create({
+    data: {
+      customerId: customer2.id,
+      storeId: store.id,
+      totalPrice: 11.98,
+      status: "DELIVERED",
+      deliveryAddress: "456 Oak Ave, Springfield",
+      items: {
+        create: [
+          { productId: dbProducts[2].id, quantity: 2, price: 5.99 },
+        ]
+      }
+    }
+  });
+
+  const order3 = await prisma.order.create({
+    data: {
+      customerId: customer1.id,
+      storeId: store.id,
+      totalPrice: 6.99,
+      status: "PENDING",
+      deliveryAddress: "123 Maple St, Springfield",
+      items: {
+        create: [
+          { productId: dbProducts[0].id, quantity: 1, price: 6.99 },
+        ]
+      }
+    }
+  });
+
+  // Create Reviews
+  await prisma.review.createMany({
+    data: [
+      {
+        customerId: customer1.id,
+        storeId: store.id,
+        rating: 5,
+        comment: "The Whopper was amazing as always! Fast delivery.",
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+      },
+      {
+        customerId: customer2.id,
+        storeId: store.id,
+        rating: 4,
+        comment: "Good food, but the fries were a bit cold.",
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
+      },
+      {
+        customerId: customer1.id,
+        storeId: store.id,
+        rating: 5,
+        comment: "Excellent service and quality.",
+        ownerReply: "Thank you Alex! We appreciate your loyalty.",
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
+      }
+    ]
+  });
+
   console.log("Seed data created successfully!");
   console.log("Admin:", admin.email);
   console.log("Store Owner:", owner.email);
+  console.log("Customer 1:", customer1.email);
+  console.log("Customer 2:", customer2.email);
 }
 
 main()
