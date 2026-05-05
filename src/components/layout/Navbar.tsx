@@ -91,8 +91,16 @@ export default function Navbar() {
                   >
                     <LogOut className="h-5 w-5" />
                   </button>
-                  <Link href="/profile" className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium hover:bg-primary/20 transition-colors">
-                    <User className="h-4 w-4" />
+                  <Link href="/profile" className="flex items-center gap-2 p-1 pl-1 pr-3 bg-primary/10 text-primary rounded-full text-sm font-medium hover:bg-primary/20 transition-colors">
+                    {session.user?.image ? (
+                      <div className="h-7 w-7 rounded-full overflow-hidden border border-primary/20">
+                        <img src={session.user.image} alt="Profile" className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center">
+                        <User className="h-4 w-4" />
+                      </div>
+                    )}
                     <span className="max-w-[100px] truncate">{session.user?.name || "Profile"}</span>
                   </Link>
                 </div>
@@ -125,8 +133,12 @@ export default function Navbar() {
             {status === "authenticated" ? (
               <>
                 <div className="flex items-center gap-3 px-2 py-1">
-                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <User className="h-4 w-4" />
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary overflow-hidden border">
+                    {session.user?.image ? (
+                      <img src={session.user.image} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="h-5 w-5" />
+                    )}
                   </div>
                   <div>
                     <p className="text-sm font-bold truncate">{session.user?.name}</p>

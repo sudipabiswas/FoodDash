@@ -16,6 +16,7 @@ model User {
   email     String   @unique
   name      String?
   password  String
+  image     String?  // Profile picture URL
   role      String   @default("CUSTOMER") // ADMIN, STORE_OWNER, CUSTOMER, DELIVERY_MAN
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -30,6 +31,7 @@ model Store {
   id             String   @id @default(cuid())
   name           String
   description    String?
+  image          String?  // Restaurant logo/profile image
   ownerId        String
   owner          User     @relation("StoreOwner", fields: [ownerId], references: [id])
   active         Boolean  @default(true)

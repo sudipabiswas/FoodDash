@@ -9,7 +9,7 @@ export async function PUT(req: Request) {
   }
 
   try {
-    const { name } = await req.json();
+    const { name, image } = await req.json();
 
     if (!name || name.trim() === "") {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -17,7 +17,10 @@ export async function PUT(req: Request) {
 
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
-      data: { name: name.trim() },
+      data: { 
+        name: name.trim(),
+        image: image || undefined,
+      },
     });
 
     return NextResponse.json({ success: true, user: updatedUser });

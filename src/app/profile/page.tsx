@@ -1,10 +1,10 @@
 "use client";
 
-import { ShoppingBag, Clock, MapPin, ChevronRight, User, X } from "lucide-react";
+import { ShoppingBag, Clock, MapPin, ChevronRight, User, X, ImagePlus, Loader2, Camera } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function ProfilePage() {
   const { data: session, status, update } = useSession();
@@ -14,6 +14,13 @@ export default function ProfilePage() {
   const [newName, setNewName] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState("");
+  
+  const [storeData, setStoreData] = useState<any>(null);
+  const [storeLoading, setStoreLoading] = useState(false);
+  const [uploadingStoreLogo, setUploadingStoreLogo] = useState(false);
+  const [uploadingUserAvatar, setUploadingUserAvatar] = useState(false);
+
+  const isStoreOwner = (session?.user as any)?.role === "STORE_OWNER";
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -22,7 +29,25 @@ export default function ProfilePage() {
     if (session?.user?.name) {
       setNewName(session.user.name);
     }
-  }, [status, router, session]);
+    if (isStoreOwner) {
+      fetchStoreData();
+    }
+  }, [status, router, session, isStoreOwner]);
+
+  const fetchStoreData = async () => {
+    setStoreLoading(true);
+    try {
+      const res = await fetch("/api/store");
+      const data = await res.json();
+      if (res.ok) {
+        setStoreData(data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setStoreLoading(false);
+    }
+  };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +62,7 @@ export default function ProfilePage() {
       });
 
       if (res.ok) {
-        await update({ name: newName }); // Update NextAuth session
+        await update({ name: newName });
         setIsEditing(false);
         router.refresh();
       } else {
@@ -51,6 +76,68 @@ export default function ProfilePage() {
     }
   };
 
+  const handleUserAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingUserAvatar(true);
+    try {
+      const res = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}&contentType=${encodeURIComponent(file.type)}`);
+      const { signedUrl, publicUrl } = await res.json();
+      
+      await fetch(signedUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+
+      // Update user image in DB
+      const profileRes = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: session?.user?.name, image: publicUrl }),
+      });
+
+      if (profileRes.ok) {
+        await update({ image: publicUrl }); // Update NextAuth session
+      }
+    } catch (err) {
+      console.error("Avatar upload failed", err);
+    } finally {
+      setUploadingUserAvatar(false);
+    }
+  };
+
+  const handleStoreImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingStoreLogo(true);
+    try {
+      const res = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}&contentType=${encodeURIComponent(file.type)}`);
+      const { signedUrl, publicUrl } = await res.json();
+      
+      await fetch(signedUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+
+      // Update store image in DB
+      await fetch("/api/store", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: publicUrl }),
+      });
+
+      setStoreData({ ...storeData, image: publicUrl });
+    } catch (err) {
+      console.error("Store logo upload failed", err);
+    } finally {
+      setUploadingStoreLogo(false);
+    }
+  };
+
   if (status === "loading") {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -60,8 +147,6 @@ export default function ProfilePage() {
   }
 
   if (!session) return null;
-
-  const isStoreOwner = (session.user as any)?.role === "STORE_OWNER";
 
   const previousOrders = [
     { id: "1001", store: "Burger King", date: "Oct 24, 2023", total: 45.99, status: "Delivered", items: ["Whopper", "Fries", "Coke"] },
@@ -73,9 +158,25 @@ export default function ProfilePage() {
       <div className="flex flex-col md:flex-row gap-12">
         {/* Profile Sidebar */}
         <aside className="md:w-80 space-y-6">
-           <div className="p-8 bg-card border rounded-[2.5rem] text-center space-y-4 shadow-sm">
-              <div className="w-24 h-24 bg-primary/10 rounded-full mx-auto flex items-center justify-center border-4 border-background">
-                 <User className="h-12 w-12 text-primary" />
+           <div className="p-8 bg-card border rounded-[2.5rem] text-center space-y-4 shadow-sm relative group/sidebar">
+              <div className="w-28 h-28 bg-primary/10 rounded-full mx-auto flex items-center justify-center border-4 border-background relative group/avatar shadow-inner">
+                 {session.user?.image ? (
+                   <img src={session.user.image} alt="Avatar" className="w-full h-full object-cover rounded-full" />
+                 ) : (
+                   <User className="h-12 w-12 text-primary" />
+                 )}
+                 
+                 {uploadingUserAvatar && (
+                   <div className="absolute inset-0 bg-background/60 rounded-full flex items-center justify-center z-10">
+                     <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                   </div>
+                 )}
+                 
+                 <label className="absolute -bottom-2 -right-4 flex items-center gap-1.5 px-3 py-2 bg-primary text-white rounded-full shadow-lg cursor-pointer hover:scale-105 transition-transform border-4 border-background z-20">
+                    <Camera className="h-4 w-4" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Change</span>
+                    <input type="file" className="hidden" accept="image/*" onChange={handleUserAvatarUpload} disabled={uploadingUserAvatar} />
+                 </label>
               </div>
               <div>
                  <h2 className="text-2xl font-extrabold">{session.user?.name}</h2>
@@ -85,7 +186,7 @@ export default function ProfilePage() {
                  </div>
               </div>
               <button onClick={() => setIsEditing(true)} className="w-full py-3 bg-muted rounded-xl text-sm font-bold hover:bg-muted/80 transition-colors">
-                 Edit Profile
+                 Edit Name
               </button>
            </div>
 
@@ -161,16 +262,34 @@ export default function ProfilePage() {
                  </div>
                </div>
 
-               <div className="bg-card border rounded-3xl p-8">
-                  <h3 className="text-xl font-bold mb-4">My Store</h3>
-                  <div className="flex items-center gap-6">
-                     <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center">
-                        <ShoppingBag className="h-10 w-10 text-muted-foreground" />
-                     </div>
-                     <div>
-                        <h4 className="text-lg font-bold">Sudipa's Bakery</h4>
-                        <p className="text-sm text-muted-foreground">Status: <span className="text-green-600 font-bold">Active</span></p>
-                        <p className="text-xs text-muted-foreground mt-1">Joined: April 2026</p>
+               <div className="bg-card border rounded-3xl p-8 flex flex-col sm:flex-row items-center gap-8 group">
+                  <div className="relative">
+                    <div className="w-32 h-32 bg-muted rounded-2xl flex items-center justify-center overflow-hidden border-2 border-primary/10 shadow-inner">
+                       {storeData?.image ? (
+                          <img src={storeData.image} alt="Logo" className="w-full h-full object-cover" />
+                       ) : (
+                          <ShoppingBag className="h-12 w-12 text-muted-foreground/30" />
+                       )}
+                       {uploadingStoreLogo && (
+                         <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                           <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                         </div>
+                       )}
+                    </div>
+                    <label className="absolute -bottom-2 -right-4 flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-2xl shadow-xl cursor-pointer hover:scale-105 transition-transform border-4 border-background z-20">
+                       <Camera className="h-5 w-5" />
+                       <span className="text-xs font-bold uppercase tracking-widest">Update Logo</span>
+                       <input type="file" className="hidden" accept="image/*" onChange={handleStoreImageUpload} disabled={uploadingStoreLogo} />
+                    </label>
+                  </div>
+                  <div className="flex-1 text-center sm:text-left space-y-1">
+                     <h4 className="text-2xl font-extrabold">{storeData?.name || "Loading..."}</h4>
+                     <p className="text-sm text-muted-foreground">Status: <span className="text-green-600 font-bold">{storeData?.active ? "Active" : "Paused"}</span></p>
+                     <p className="text-xs text-muted-foreground mt-2 max-w-md line-clamp-2">{storeData?.description || "No description set."}</p>
+                     <div className="pt-4">
+                        <Link href="/store-dashboard/settings" className="text-sm font-bold text-primary hover:underline flex items-center gap-1 justify-center sm:justify-start">
+                           Edit Store Details <ChevronRight className="h-3 w-3" />
+                        </Link>
                      </div>
                   </div>
                </div>

@@ -1,18 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Save, Store, Truck, Info, CheckCircle2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Save, Store, Truck, Info, CheckCircle2, ImagePlus, Loader2, X } from "lucide-react";
 
 export default function StoreSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadState, setUploadState] = useState<"idle" | "uploading" | "done" | "error">("idle");
   const [store, setStore] = useState({
     name: "",
     description: "",
     active: true,
     deliveryZone: "",
     deliveryCharge: 0,
+    image: "",
   });
 
   useEffect(() => {
@@ -30,6 +33,36 @@ export default function StoreSettingsPage() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadState("uploading");
+    try {
+      // 1. Get a presigned URL from our API
+      const res = await fetch(
+        `/api/upload?filename=${encodeURIComponent(file.name)}&contentType=${encodeURIComponent(file.type)}`
+      );
+      if (!res.ok) throw new Error("Failed to get upload URL");
+      const { signedUrl, publicUrl } = await res.json();
+
+      // 2. PUT the file directly to R2
+      const uploadRes = await fetch(signedUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!uploadRes.ok) throw new Error("Failed to upload to R2");
+
+      setStore({ ...store, image: publicUrl });
+      setUploadState("done");
+      setTimeout(() => setUploadState("idle"), 3000);
+    } catch (err) {
+      console.error(err);
+      setUploadState("error");
     }
   };
 
@@ -83,7 +116,45 @@ export default function StoreSettingsPage() {
               <h2 className="text-xl font-bold">General Info</h2>
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Logo Upload Section */}
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-muted-foreground">Restaurant Logo / Profile Image</label>
+                <div className="flex items-center gap-6">
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="relative w-24 h-24 rounded-2xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/40 bg-muted/20 hover:bg-primary/5 flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden group"
+                  >
+                    {store.image ? (
+                      <img src={store.image} alt="Logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <ImagePlus className="h-8 w-8 text-muted-foreground/40" />
+                    )}
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="text-[10px] text-white font-bold">Change</p>
+                    </div>
+                    {uploadState === "uploading" && (
+                      <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
+                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-bold">Upload Logo</p>
+                    <p className="text-xs text-muted-foreground">Recommend: 512x512px (JPG or PNG)</p>
+                    {uploadState === "done" && <p className="text-[10px] text-green-600 font-bold">Image ready!</p>}
+                    {uploadState === "error" && <p className="text-[10px] text-destructive font-bold">Upload failed</p>}
+                  </div>
+                  <input 
+                    ref={fileInputRef}
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={handleImageChange}
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-muted-foreground">Restaurant Name</label>
                 <input

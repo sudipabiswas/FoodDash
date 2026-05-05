@@ -28,7 +28,7 @@ export async function PATCH(req: Request) {
   }
 
   try {
-    const { name, description, active, deliveryZone, deliveryCharge } = await req.json();
+    const { name, description, active, deliveryZone, deliveryCharge, image } = await req.json();
 
     const store = await prisma.store.findFirst({
       where: { ownerId: session.user?.id },
@@ -46,6 +46,7 @@ export async function PATCH(req: Request) {
         active,
         deliveryZone,
         deliveryCharge: parseFloat(deliveryCharge),
+        image: image || undefined,
       },
     });
 
