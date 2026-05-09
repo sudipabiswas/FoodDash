@@ -62,7 +62,7 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-4">
-            {!pathname?.startsWith("/store-dashboard") && (
+            {!pathname?.startsWith("/store-dashboard") && (session?.user as any)?.role !== "STORE_OWNER" && (
               <>
                 <form onSubmit={handleSearch} className="hidden sm:flex items-center relative group">
                   <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
@@ -184,7 +184,7 @@ export default function Navbar() {
             )}
           </div>
 
-          {!pathname?.startsWith("/store-dashboard") && (
+          {!pathname?.startsWith("/store-dashboard") && (session?.user as any)?.role !== "STORE_OWNER" && (
             <form onSubmit={handleSearch} className="relative pt-2">
               <Search className="absolute left-2.5 top-5 h-4 w-4 text-muted-foreground" />
               <input
