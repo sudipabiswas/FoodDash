@@ -31,12 +31,6 @@ export default function Home() {
             >
               Order Now <ArrowRight className="h-5 w-5" />
             </Link>
-            <Link 
-              href="/become-partner" 
-              className="px-8 py-4 bg-secondary text-secondary-foreground rounded-full font-bold text-lg hover:bg-secondary/80 transition-all"
-            >
-              List Your Restaurant
-            </Link>
           </div>
         </div>
       </section>
