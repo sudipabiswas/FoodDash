@@ -16,6 +16,7 @@ export default function StoreSettingsPage() {
     deliveryZone: "",
     deliveryCharge: 0,
     image: "",
+    mainCategory: "",
   });
 
   useEffect(() => {
@@ -175,6 +176,21 @@ export default function StoreSettingsPage() {
                   value={store.name}
                   onChange={(e) => setStore({ ...store, name: e.target.value })}
                 />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-muted-foreground">Restaurant Category (Mandatory)</label>
+                <select
+                  required
+                  className="w-full px-4 py-3 rounded-xl border bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  value={store.mainCategory || ""}
+                  onChange={(e) => setStore({ ...store, mainCategory: e.target.value })}
+                >
+                  <option value="" disabled>Select a category</option>
+                  {["Burgers", "Pizza", "Sushi", "Desserts", "Coffee", "Healthy"].map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
               </div>
               
               <div className="space-y-2">

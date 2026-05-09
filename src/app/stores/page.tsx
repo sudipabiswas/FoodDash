@@ -23,7 +23,7 @@ export default async function StoresPage(props: {
         ]
       } : {}),
       ...(category ? {
-        description: { contains: category } // Fallback: searching category name in description
+        mainCategory: category
       } : {})
     },
     include: {
