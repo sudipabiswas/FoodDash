@@ -1,15 +1,30 @@
 import Link from "next/link";
 import { ArrowRight, Star, Clock, MapPin } from "lucide-react";
+import { prisma } from "@/lib/prisma";
 
-export default function Home() {
-  const categories = [
-    { name: "Burgers", icon: "🍔", count: 12 },
-    { name: "Pizza", icon: "🍕", count: 8 },
-    { name: "Sushi", icon: "🍣", count: 5 },
-    { name: "Desserts", icon: "🍰", count: 15 },
-    { name: "Coffee", icon: "☕", count: 10 },
-    { name: "Healthy", icon: "🥗", count: 7 },
-  ];
+export default async function Home() {
+  const categoryNames = ["Burgers", "Pizza", "Sushi", "Desserts", "Coffee", "Healthy"];
+  const categoryIcons: { [key: string]: string } = {
+    Burgers: "🍔",
+    Pizza: "🍕",
+    Sushi: "🍣",
+    Desserts: "🍰",
+    Coffee: "☕",
+    Healthy: "🥗",
+  };
+
+  // Fetch real counts for each category
+  const categories = await Promise.all(
+    categoryNames.map(async (name) => {
+      const count = await prisma.store.count({
+        where: {
+          active: true,
+          description: { contains: name }
+        }
+      });
+      return { name, icon: categoryIcons[name], count };
+    })
+  );
 
   return (
     <div className="flex flex-col gap-16 pb-16">
@@ -39,20 +54,21 @@ export default function Home() {
       <section className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-3xl font-bold">Popular Categories</h2>
-          <Link href="/categories" className="text-primary font-semibold hover:underline flex items-center gap-1">
+          <Link href="/stores" className="text-primary font-semibold hover:underline flex items-center gap-1">
             View all <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
           {categories.map((cat: any) => (
-            <div 
+            <Link 
               key={cat.name}
+              href={`/stores?category=${cat.name}`}
               className="group cursor-pointer p-6 rounded-2xl bg-muted/30 border border-transparent hover:border-primary/20 hover:bg-white hover:shadow-lg transition-all text-center"
             >
               <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">{cat.icon}</div>
               <h3 className="font-bold text-lg">{cat.name}</h3>
               <p className="text-sm text-muted-foreground">{cat.count} Restaurants</p>
-            </div>
+            </Link>
           ))}
         </div>
       </section>

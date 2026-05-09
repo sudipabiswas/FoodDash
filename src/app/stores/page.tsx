@@ -9,6 +9,9 @@ export default async function StoresPage(props: {
   const rawQuery = searchParams?.search;
   const query = typeof rawQuery === 'string' ? rawQuery : Array.isArray(rawQuery) ? rawQuery[0] : "";
 
+  const rawCategory = searchParams?.category;
+  const category = typeof rawCategory === 'string' ? rawCategory : undefined;
+
   const stores = await prisma.store.findMany({
     where: { 
       active: true,
@@ -18,6 +21,9 @@ export default async function StoresPage(props: {
           { description: { contains: query } },
           { products: { some: { name: { contains: query } } } }
         ]
+      } : {}),
+      ...(category ? {
+        description: { contains: category } // Fallback: searching category name in description
       } : {})
     },
     include: {
