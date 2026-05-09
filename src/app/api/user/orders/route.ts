@@ -51,73 +51,92 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { items, storeId, deliveryAddress, paymentMethod, couponCode } = await req.json();
+    const { items, deliveryAddress, paymentMethod, couponCode } = await req.json();
 
-    if (!items || items.length === 0 || !storeId || !deliveryAddress) {
+    if (!items || items.length === 0 || !deliveryAddress) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    let discount = 0;
-    let couponId = null;
+    // Group items by storeId
+    const itemsByStore: Record<string, any[]> = {};
+    items.forEach((item: any) => {
+      if (!itemsByStore[item.storeId]) {
+        itemsByStore[item.storeId] = [];
+      }
+      itemsByStore[item.storeId].push(item);
+    });
 
-    if (couponCode) {
-      const coupon = await prisma.coupon.findFirst({
-        where: {
-          code: couponCode,
-          isActive: true,
-          expiryDate: { gte: new Date() },
-          OR: [
-            { storeId: storeId },
-            { storeId: null }
-          ]
-        }
-      });
+    const storeIds = Object.keys(itemsByStore);
+    const createdOrders = [];
 
-      if (coupon) {
-        couponId = coupon.id;
-        // Calculate subtotal for discount
-        const subtotal = items.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
-        if (coupon.type === "PERCENTAGE") {
-          discount = (subtotal * coupon.discount) / 100;
-        } else {
-          discount = coupon.discount;
+    for (const storeId of storeIds) {
+      const storeItems = itemsByStore[storeId];
+      let discount = 0;
+      let couponId = null;
+
+      // Handle coupon for this specific store order
+      if (couponCode) {
+        const coupon = await prisma.coupon.findFirst({
+          where: {
+            code: couponCode,
+            isActive: true,
+            expiryDate: { gte: new Date() },
+            OR: [
+              { storeId: storeId },
+              { storeId: null }
+            ]
+          }
+        });
+
+        if (coupon) {
+          couponId = coupon.id;
+          const subtotal = storeItems.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
+          if (coupon.type === "PERCENTAGE") {
+            discount = (subtotal * coupon.discount) / 100;
+          } else {
+            // If fixed amount, and it's a multi-store order, we might need a policy.
+            // For now, apply it to the first eligible store found.
+            discount = coupon.discount;
+          }
         }
       }
+
+      const store = await prisma.store.findUnique({
+        where: { id: storeId },
+        select: { deliveryCharge: true }
+      });
+
+      const deliveryCharge = store?.deliveryCharge || 0;
+      const subtotal = storeItems.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
+      const totalPrice = subtotal + deliveryCharge - discount;
+
+      const order = await prisma.order.create({
+        data: {
+          customerId: session.user.id,
+          storeId,
+          deliveryAddress,
+          paymentMethod,
+          couponId,
+          discount,
+          totalPrice: Math.max(0, totalPrice),
+          deliveryCharge,
+          items: {
+            create: storeItems.map((item: any) => ({
+              productId: item.id,
+              quantity: item.quantity,
+              price: item.price,
+            })),
+          },
+        },
+      });
+      createdOrders.push(order);
     }
 
-    const store = await prisma.store.findUnique({
-      where: { id: storeId },
-      select: { deliveryCharge: true }
-    });
-
-    const deliveryCharge = store?.deliveryCharge || 0;
-    const subtotal = items.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
-    const totalPrice = subtotal + deliveryCharge - discount;
-
-    const order = await prisma.order.create({
-      data: {
-        customerId: session.user.id,
-        storeId,
-        deliveryAddress,
-        paymentMethod,
-        couponId,
-        discount,
-        totalPrice: Math.max(0, totalPrice),
-        deliveryCharge,
-        items: {
-          create: items.map((item: any) => ({
-            productId: item.id,
-            quantity: item.quantity,
-            price: item.price,
-          })),
-        },
-      },
-    });
-
-    return NextResponse.json(order);
+    return NextResponse.json(createdOrders);
   } catch (error) {
-    console.error("Failed to place order:", error);
+    console.error("Failed to place orders:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
 

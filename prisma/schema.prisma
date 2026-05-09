@@ -87,6 +87,7 @@ model Order {
   discount        Float       @default(0)
   paymentMethod   String      @default("CASH") // CASH, CARD
   couponId        String?
+  coupon          Coupon?     @relation(fields: [couponId], references: [id])
   deliveryAddress String
   deliveryCharge  Float       @default(0)
   items           OrderItem[]
@@ -125,4 +126,5 @@ model Coupon {
   store      Store?   @relation(fields: [storeId], references: [id])
   expiryDate DateTime
   isActive   Boolean  @default(true)
+  orders     Order[]
 }

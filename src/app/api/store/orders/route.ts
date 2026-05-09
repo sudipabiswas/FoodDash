@@ -26,6 +26,7 @@ export async function GET() {
       items: {
         include: { product: true },
       },
+      coupon: true,
     },
     orderBy: { createdAt: "desc" },
   });
