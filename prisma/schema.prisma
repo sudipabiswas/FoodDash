@@ -84,6 +84,9 @@ model Order {
   deliveryMan     User?       @relation("DeliveryManOrders", fields: [deliveryManId], references: [id])
   status          String      @default("PENDING") // PENDING, ACCEPTED, PREPARING, OUT_FOR_DELIVERY, DELIVERED, CANCELLED
   totalPrice      Float
+  discount        Float       @default(0)
+  paymentMethod   String      @default("CASH") // CASH, CARD
+  couponId        String?
   deliveryAddress String
   deliveryCharge  Float       @default(0)
   items           OrderItem[]
