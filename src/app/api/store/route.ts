@@ -36,7 +36,7 @@ export async function PATCH(req: Request) {
     if (data.active !== undefined) updateData.active = data.active;
     if (data.deliveryZone !== undefined) updateData.deliveryZone = data.deliveryZone;
     if (data.image !== undefined) updateData.image = data.image;
-    if (data.mainCategory !== undefined) updateData.mainCategory = data.mainCategory;
+    if (data.mainCategories !== undefined) updateData.mainCategories = data.mainCategories;
     if (data.deliveryCharge !== undefined && data.deliveryCharge !== "") {
       const charge = parseFloat(data.deliveryCharge);
       if (!isNaN(charge)) {

@@ -19,7 +19,7 @@ export default async function Home() {
       const count = await prisma.store.count({
         where: {
           active: true,
-          mainCategory: name
+          mainCategories: { has: name }
         }
       });
       return { name, icon: categoryIcons[name], count };

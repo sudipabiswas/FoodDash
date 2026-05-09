@@ -23,7 +23,7 @@ export default async function StoresPage(props: {
         ]
       } : {}),
       ...(category ? {
-        mainCategory: category
+        mainCategories: { has: category }
       } : {})
     },
     include: {

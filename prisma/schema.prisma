@@ -37,7 +37,7 @@ model Store {
   active         Boolean  @default(true)
   deliveryZone   String?
   deliveryCharge Float    @default(0)
-  mainCategory   String?  // Burgers, Pizza, Sushi, Desserts, Coffee, Healthy
+  mainCategories String[] @default([]) // Burgers, Pizza, Sushi, Desserts, Coffee, Healthy
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

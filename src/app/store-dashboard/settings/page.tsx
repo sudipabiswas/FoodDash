@@ -16,7 +16,7 @@ export default function StoreSettingsPage() {
     deliveryZone: "",
     deliveryCharge: 0,
     image: "",
-    mainCategory: "",
+    mainCategories: [] as string[],
   });
 
   useEffect(() => {
@@ -178,19 +178,35 @@ export default function StoreSettingsPage() {
                 />
               </div>
               
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-muted-foreground">Restaurant Category (Mandatory)</label>
-                <select
-                  required
-                  className="w-full px-4 py-3 rounded-xl border bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  value={store.mainCategory || ""}
-                  onChange={(e) => setStore({ ...store, mainCategory: e.target.value })}
-                >
-                  <option value="" disabled>Select a category</option>
+              <div className="space-y-4">
+                <label className="text-sm font-semibold text-muted-foreground">Restaurant Categories (Select all that apply)</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {["Burgers", "Pizza", "Sushi", "Desserts", "Coffee", "Healthy"].map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <label 
+                      key={cat} 
+                      className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition-all ${
+                        store.mainCategories?.includes(cat) 
+                          ? "bg-primary/10 border-primary text-primary" 
+                          : "bg-background hover:bg-muted"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 accent-primary"
+                        checked={store.mainCategories?.includes(cat)}
+                        onChange={(e) => {
+                          const current = store.mainCategories || [];
+                          if (e.target.checked) {
+                            setStore({ ...store, mainCategories: [...current, cat] });
+                          } else {
+                            setStore({ ...store, mainCategories: current.filter(c => c !== cat) });
+                          }
+                        }}
+                      />
+                      <span className="text-sm font-medium">{cat}</span>
+                    </label>
                   ))}
-                </select>
+                </div>
               </div>
               
               <div className="space-y-2">
