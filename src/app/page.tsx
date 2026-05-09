@@ -1,10 +1,58 @@
 import Link from "next/link";
 import { ArrowRight, Star, Clock, MapPin } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+import OwnerLanding from "@/components/home/OwnerLanding";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  const session = await auth();
+  const userRole = (session?.user as any)?.role;
+
+  // 1. If Store Owner, show Owner Landing Page
+  if (userRole === "STORE_OWNER") {
+    const store = await prisma.store.findFirst({
+      where: { ownerId: session?.user?.id },
+      include: {
+        _count: { select: { products: true } }
+      }
+    });
+
+    if (store) {
+      const recentOrders = await prisma.order.findMany({
+        where: { storeId: store.id },
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        include: { customer: { select: { name: true } } }
+      });
+
+      const totalRevenue = await prisma.order.aggregate({
+        where: { storeId: store.id, status: "DELIVERED" },
+        _sum: { totalPrice: true }
+      });
+
+      const reviews = await prisma.review.findMany({
+        where: { storeId: store.id },
+        select: { rating: true }
+      });
+
+      const avgRating = reviews.length > 0 
+        ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+        : "0.0";
+
+      const ownerStats = [
+        { name: "Total Revenue", value: `$${(totalRevenue._sum.totalPrice || 0).toFixed(2)}`, growth: "+12%", link: "/store-dashboard/revenue" },
+        { name: "Total Orders", value: recentOrders.length.toString(), growth: "+5%", link: "/store-dashboard/orders" },
+        { name: "Active Products", value: store._count.products.toString(), growth: "Stable", link: "/store-dashboard/products" },
+        { name: "Customer Rating", value: avgRating, growth: `(${reviews.length} reviews)`, link: "/store-dashboard/reviews" },
+      ];
+
+      return <OwnerLanding stats={ownerStats} recentOrders={recentOrders} storeName={store.name} />;
+    }
+  }
+
+  // 2. Otherwise (Customer or Guest), show current Customer Landing Page
   const categoryNames = ["Burgers", "Pizza", "Sushi", "Desserts", "Coffee", "Healthy"];
   const categoryIcons: { [key: string]: string } = {
     Burgers: "🍔",
