@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Star, Clock, Info, ShoppingBag } from "lucide-react";
 import AddToCartButton from "@/components/cart/AddToCartButton";
+import StoreSideCart from "@/components/cart/StoreSideCart";
 
 export default async function StoreMenuPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -22,6 +23,7 @@ export default async function StoreMenuPage(props: { params: Promise<{ id: strin
   return (
     <div className="pb-20">
       {/* Store Header */}
+      {/* ... (existing header) */}
       <div className="h-80 relative overflow-hidden">
          {store.image ? (
            <img 
@@ -64,18 +66,28 @@ export default async function StoreMenuPage(props: { params: Promise<{ id: strin
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Categories Sidebar */}
-          <aside className="lg:w-64 space-y-2 sticky top-24 h-fit hidden lg:block">
-            <h2 className="text-xl font-extrabold mb-6 tracking-tight">Categories</h2>
-            {store.categories.map((cat: any) => (
-              <a 
-                key={cat.id} 
-                href={`#${cat.id}`}
-                className="block px-4 py-3 rounded-xl hover:bg-primary hover:text-primary-foreground transition-all font-bold text-muted-foreground bg-card border"
-              >
-                {cat.name}
-              </a>
-            ))}
+          {/* Sidebar with Categories & Cart */}
+          <aside className="lg:w-80 space-y-8 sticky top-24 h-fit hidden lg:block">
+            <StoreSideCart 
+              storeId={store.id} 
+              storeName={store.name} 
+              deliveryCharge={store.deliveryCharge} 
+            />
+
+            <div>
+              <h2 className="text-xl font-extrabold mb-6 tracking-tight">Categories</h2>
+              <div className="space-y-2">
+                {store.categories.map((cat: any) => (
+                  <a 
+                    key={cat.id} 
+                    href={`#${cat.id}`}
+                    className="block px-4 py-3 rounded-xl hover:bg-primary hover:text-primary-foreground transition-all font-bold text-muted-foreground bg-card border"
+                  >
+                    {cat.name}
+                  </a>
+                ))}
+              </div>
+            </div>
           </aside>
 
           {/* Menu Items */}
