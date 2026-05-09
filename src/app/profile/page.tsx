@@ -132,6 +132,7 @@ export default function ProfilePage() {
         body: JSON.stringify({ image: publicUrl }),
       });
 
+      await update({ image: publicUrl }); // Refresh session image
       setStoreData({ ...storeData, image: publicUrl });
     } catch (err) {
       console.error("Store logo upload failed", err);
@@ -161,6 +162,8 @@ export default function ProfilePage() {
               <div className="w-24 h-24 bg-primary/10 rounded-full mx-auto flex items-center justify-center border-4 border-background relative overflow-hidden group/avatar">
                  {session.user?.image ? (
                    <img src={session.user.image} alt="Avatar" className="w-full h-full object-cover" />
+                 ) : isStoreOwner && storeData?.image ? (
+                   <img src={storeData.image} alt="Store Logo" className="w-full h-full object-cover" />
                  ) : (
                    <User className="h-12 w-12 text-primary" />
                  )}

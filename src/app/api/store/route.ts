@@ -56,6 +56,14 @@ export async function PATCH(req: Request) {
       data: updateData,
     });
 
+    // If a logo was uploaded, also update the owner's profile picture for consistency
+    if (updateData.image) {
+      await prisma.user.update({
+        where: { id: session.user?.id },
+        data: { image: updateData.image },
+      });
+    }
+
     return NextResponse.json(updatedStore);
   } catch (error) {
     console.error("Store update error:", error);
