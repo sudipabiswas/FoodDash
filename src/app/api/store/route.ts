@@ -28,7 +28,20 @@ export async function PATCH(req: Request) {
   }
 
   try {
-    const { name, description, active, deliveryZone, deliveryCharge, image } = await req.json();
+    const data = await req.json();
+    const updateData: any = {};
+
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.active !== undefined) updateData.active = data.active;
+    if (data.deliveryZone !== undefined) updateData.deliveryZone = data.deliveryZone;
+    if (data.image !== undefined) updateData.image = data.image;
+    if (data.deliveryCharge !== undefined && data.deliveryCharge !== "") {
+      const charge = parseFloat(data.deliveryCharge);
+      if (!isNaN(charge)) {
+        updateData.deliveryCharge = charge;
+      }
+    }
 
     const store = await prisma.store.findFirst({
       where: { ownerId: session.user?.id },
@@ -40,14 +53,7 @@ export async function PATCH(req: Request) {
 
     const updatedStore = await prisma.store.update({
       where: { id: store.id },
-      data: {
-        name,
-        description,
-        active,
-        deliveryZone,
-        deliveryCharge: parseFloat(deliveryCharge),
-        image: image || undefined,
-      },
+      data: updateData,
     });
 
     return NextResponse.json(updatedStore);

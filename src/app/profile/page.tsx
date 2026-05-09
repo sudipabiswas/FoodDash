@@ -159,22 +159,22 @@ export default function ProfilePage() {
         {/* Profile Sidebar */}
         <aside className="md:w-80 space-y-6">
            <div className="p-8 bg-card border rounded-[2.5rem] text-center space-y-4 shadow-sm relative group/sidebar">
-              <div className="w-28 h-28 bg-primary/10 rounded-full mx-auto flex items-center justify-center border-4 border-background relative group/avatar shadow-inner">
+              <div className="w-24 h-24 bg-primary/10 rounded-full mx-auto flex items-center justify-center border-4 border-background relative overflow-hidden group/avatar">
                  {session.user?.image ? (
-                   <img src={session.user.image} alt="Avatar" className="w-full h-full object-cover rounded-full" />
+                   <img src={session.user.image} alt="Avatar" className="w-full h-full object-cover" />
                  ) : (
                    <User className="h-12 w-12 text-primary" />
                  )}
                  
                  {uploadingUserAvatar && (
-                   <div className="absolute inset-0 bg-background/60 rounded-full flex items-center justify-center z-10">
+                   <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
                    </div>
                  )}
                  
-                 <label className="absolute -bottom-2 -right-4 flex items-center gap-1.5 px-3 py-2 bg-primary text-white rounded-full shadow-lg cursor-pointer hover:scale-105 transition-transform border-4 border-background z-20">
-                    <Camera className="h-4 w-4" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Change</span>
+                 <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity cursor-pointer">
+                    <Camera className="h-6 w-6 text-white mb-1" />
+                    <span className="text-[8px] text-white font-bold uppercase tracking-widest">Update</span>
                     <input type="file" className="hidden" accept="image/*" onChange={handleUserAvatarUpload} disabled={uploadingUserAvatar} />
                  </label>
               </div>
@@ -276,9 +276,8 @@ export default function ProfilePage() {
                          </div>
                        )}
                     </div>
-                    <label className="absolute -bottom-2 -right-4 flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-2xl shadow-xl cursor-pointer hover:scale-105 transition-transform border-4 border-background z-20">
-                       <Camera className="h-5 w-5" />
-                       <span className="text-xs font-bold uppercase tracking-widest">Update Logo</span>
+                    <label className="absolute -bottom-2 -right-2 p-2 bg-primary text-white rounded-xl shadow-lg cursor-pointer hover:scale-110 transition-transform">
+                       <ImagePlus className="h-4 w-4" />
                        <input type="file" className="hidden" accept="image/*" onChange={handleStoreImageUpload} disabled={uploadingStoreLogo} />
                     </label>
                   </div>

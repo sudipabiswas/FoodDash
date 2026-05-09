@@ -3,9 +3,22 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Package, ShoppingBag, Settings, LogOut, BarChart3, Tag } from "lucide-react";
+import { signOut } from "next-auth/react";
 
 export function StoreSidebar() {
   const pathname = usePathname();
+
+  const handleLogout = async () => {
+    try {
+      await Promise.race([
+        signOut({ redirect: false }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000))
+      ]);
+    } catch (error) {
+      console.error("Logout failed or timed out:", error);
+    }
+    window.location.href = window.location.origin + '/login';
+  };
 
   const links = [
     { href: "/store-dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -47,7 +60,10 @@ export function StoreSidebar() {
       </nav>
 
       <div className="p-4 border-t">
-         <button className="flex items-center gap-3 px-4 py-3 w-full rounded-xl hover:bg-destructive/10 text-destructive transition-colors font-bold">
+         <button 
+           onClick={handleLogout}
+           className="flex items-center gap-3 px-4 py-3 w-full rounded-xl hover:bg-destructive/10 text-destructive transition-colors font-bold"
+         >
             <LogOut className="h-5 w-5" /> Logout
          </button>
       </div>

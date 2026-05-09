@@ -15,6 +15,20 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
 
+  const handleLogout = async () => {
+    try {
+      // Attempt to sign out, but don't let it block the redirect if it takes too long
+      await Promise.race([
+        signOut({ redirect: false }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2000))
+      ]);
+    } catch (error) {
+      console.error("Logout failed or timed out:", error);
+    }
+    // Force a hard redirect to the login page on the current origin
+    window.location.href = window.location.origin + '/login';
+  };
+
   const handleSearch = (e: React.FormEvent) => {
 
     e.preventDefault();
@@ -84,13 +98,12 @@ export default function Navbar() {
                 ) : null}
                 
                 <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => signOut()}
-                    className="p-2 hover:bg-muted rounded-full text-muted-foreground hover:text-destructive transition-colors"
-                    title="Sign Out"
-                  >
-                    <LogOut className="h-5 w-5" />
-                  </button>
+                  <button                    onClick={handleLogout}
+                  className="p-2 hover:bg-muted rounded-full text-muted-foreground hover:text-destructive transition-colors"
+                  title="Sign Out"
+                >
+                  <LogOut className="h-5 w-5" />
+                </button>
                   <Link href="/profile" className="flex items-center gap-2 p-1 pl-1 pr-3 bg-primary/10 text-primary rounded-full text-sm font-medium hover:bg-primary/20 transition-colors">
                     {session.user?.image ? (
                       <div className="h-7 w-7 rounded-full overflow-hidden border border-primary/20">
@@ -156,7 +169,7 @@ export default function Navbar() {
                   My Profile
                 </Link>
                 <button 
-                  onClick={() => signOut()}
+                  onClick={handleLogout}
                   className="flex w-full items-center gap-2 text-sm font-medium p-2 hover:bg-destructive/10 text-destructive rounded-md transition-colors text-left"
                 >
                   <LogOut className="h-4 w-4" />

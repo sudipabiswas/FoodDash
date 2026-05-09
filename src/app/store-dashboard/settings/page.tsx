@@ -57,7 +57,18 @@ export default function StoreSettingsPage() {
       });
       if (!uploadRes.ok) throw new Error("Failed to upload to R2");
 
-      setStore({ ...store, image: publicUrl });
+      // 3. Auto‑save the image to the DB and get the updated store back
+      const patchRes = await fetch("/api/store", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: publicUrl }),
+      });
+      if (!patchRes.ok) throw new Error("Failed to save store image");
+      const updatedStore = await patchRes.json();
+
+      // 4. Update local state with the fresh data
+      setStore(updatedStore);
+
       setUploadState("done");
       setTimeout(() => setUploadState("idle"), 3000);
     } catch (err) {
