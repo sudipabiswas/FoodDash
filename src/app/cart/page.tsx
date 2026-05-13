@@ -9,8 +9,14 @@ import { useRouter } from "next/navigation";
 
 export default function CartPage() {
   const { items, removeItem, addItem, totalPrice, clearCart } = useCart();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
+
+  // Redirect if not authenticated
+  if (status === "unauthenticated") {
+    router.push("/login?callbackUrl=/cart");
+    return null;
+  }
   const [isOrdering, setIsOrdering] = useState(false);
   const [createdOrders, setCreatedOrders] = useState<any[]>([]);
   const [orderComplete, setOrderComplete] = useState(false);

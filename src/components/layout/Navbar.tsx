@@ -67,7 +67,7 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-4">
-            {!pathname?.startsWith("/store-dashboard") && (session?.user as any)?.role !== "STORE_OWNER" && (
+            {status === "authenticated" && (session?.user as any)?.role === "CUSTOMER" && !pathname?.startsWith("/store-dashboard") && (
               <>
                 <form onSubmit={handleSearch} className="hidden sm:flex items-center relative group">
                   <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
@@ -145,14 +145,16 @@ export default function Navbar() {
         <div className="md:hidden border-t bg-background px-4 py-4 space-y-4">
           <Link href="/stores" className="block text-sm font-medium">Browse Stores</Link>
           {(session?.user as any)?.role === "CUSTOMER" && (
-            <Link href="/orders" className="block text-sm font-medium">My Orders</Link>
+            <>
+              <Link href="/orders" className="block text-sm font-medium">My Orders</Link>
+              <Link href="/cart" className="flex items-center justify-between text-sm font-medium group">
+                <span>My Cart</span>
+                <span className="h-5 w-5 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full group-active:scale-95 transition-transform">
+                  {totalItems}
+                </span>
+              </Link>
+            </>
           )}
-          <Link href="/cart" className="flex items-center justify-between text-sm font-medium group">
-            <span>My Cart</span>
-            <span className="h-5 w-5 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full group-active:scale-95 transition-transform">
-              {totalItems}
-            </span>
-          </Link>
           <Link href="/offers" className="block text-sm font-medium">Offers</Link>
           <Link href="/about" className="block text-sm font-medium">About</Link>
           
