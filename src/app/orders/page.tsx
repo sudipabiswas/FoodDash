@@ -8,9 +8,12 @@ import {
   MapPin, 
   ChevronRight, 
   Star,
-  MessageSquare
+  MessageSquare,
+  XCircle,
+  AlertCircle
 } from "lucide-react";
 import OrderReviewModal from "@/components/orders/OrderReviewModal";
+import toast from "react-hot-toast";
 
 export default function UserOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -32,6 +35,28 @@ export default function UserOrdersPage() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelOrder = async (orderId: string) => {
+    if (!confirm("Are you sure you want to cancel this order?")) return;
+
+    try {
+      const res = await fetch("/api/user/orders/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId }),
+      });
+
+      if (res.ok) {
+        toast.success("Order cancelled successfully");
+        fetchOrders();
+      } else {
+        const error = await res.json();
+        toast.error(error.error || "Failed to cancel order");
+      }
+    } catch (err) {
+      toast.error("An error occurred while cancelling the order");
     }
   };
 
@@ -89,6 +114,7 @@ export default function UserOrdersPage() {
                      <div className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest ${
                        order.status === "DELIVERED" ? "bg-green-100 text-green-700" :
                        order.status === "PENDING" ? "bg-orange-100 text-orange-700" :
+                       order.status === "CANCELLED" ? "bg-red-100 text-red-700" :
                        "bg-blue-100 text-blue-700"
                      }`}>
                         {order.status}
@@ -148,11 +174,28 @@ export default function UserOrdersPage() {
                           Rate & Review Meal
                         </button>
                       )
+                    ) : order.status === "CANCELLED" ? (
+                       <div className="bg-red-50/50 border border-red-100 p-8 rounded-[2rem] text-center border-dashed">
+                         <XCircle className="h-10 w-10 text-red-200 mx-auto mb-4" />
+                         <p className="text-sm font-bold text-red-700">Order Cancelled</p>
+                         <p className="text-xs text-red-600/60 mt-1">This order was cancelled and will not be processed.</p>
+                       </div>
                     ) : (
-                      <div className="bg-muted/30 p-8 rounded-[2rem] text-center border border-dashed">
-                        <Clock className="h-10 w-10 text-muted-foreground/20 mx-auto mb-4 animate-pulse" />
-                        <p className="text-sm font-bold text-muted-foreground">Tracking your order...</p>
-                        <p className="text-xs text-muted-foreground/60 mt-1">Review option will be available once delivered.</p>
+                      <div className="space-y-4">
+                        <div className="bg-muted/30 p-8 rounded-[2rem] text-center border border-dashed">
+                          <Clock className="h-10 w-10 text-muted-foreground/20 mx-auto mb-4 animate-pulse" />
+                          <p className="text-sm font-bold text-muted-foreground">Tracking your order...</p>
+                          <p className="text-xs text-muted-foreground/60 mt-1">Review option will be available once delivered.</p>
+                        </div>
+                        {order.status === "PENDING" && (
+                          <button 
+                            onClick={() => handleCancelOrder(order.id)}
+                            className="w-full py-4 bg-red-50 text-red-600 border border-red-100 rounded-[1.5rem] font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-100 transition-all"
+                          >
+                            <XCircle className="h-4 w-4" />
+                            Cancel Order
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
