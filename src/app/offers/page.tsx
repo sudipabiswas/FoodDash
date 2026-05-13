@@ -1,8 +1,9 @@
-import { Percent, Tag, Clock, ChevronRight, Store as StoreIcon } from "lucide-react";
-import Link from "next/link";
+import { Percent, Tag, Clock } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import OfferCard from "@/components/offers/OfferCard";
 
 export default async function OffersPage() {
+// ... (rest of the server component logic)
   const activeCoupons = await prisma.coupon.findMany({
     where: {
       isActive: true,
@@ -71,56 +72,9 @@ export default async function OffersPage() {
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {allOffers.map((offer: any, index: number) => {
-          const Icon = offer.icon;
-          return (
-            <div 
-              key={offer.id} 
-              className="bg-card border rounded-[2.5rem] p-8 space-y-6 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 animate-in fade-in zoom-in-95"
-              style={{ animationDelay: `${index * 100}ms`, animationFillMode: "both" }}
-            >
-              <div className="flex justify-between items-start">
-                 <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${offer.color}`}>
-                   <Icon className="h-8 w-8" />
-                 </div>
-                 {offer.storeName && (
-                   <div className="flex items-center gap-1 text-xs font-bold bg-muted px-3 py-1.5 rounded-full border">
-                      <StoreIcon className="h-3 w-3" />
-                      {offer.storeName}
-                   </div>
-                 )}
-              </div>
-              
-              <div className="space-y-2">
-                <h3 className="text-2xl font-bold leading-tight">{offer.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {offer.description}
-                </p>
-              </div>
-
-              <div className="pt-4 border-t border-dashed space-y-4">
-                <div className="flex items-center justify-between">
-                   <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Use Code</span>
-                   <span className="px-3 py-1 bg-muted rounded-lg font-mono font-bold text-sm border">
-                      {offer.code}
-                   </span>
-                </div>
-                <div className="flex items-center justify-between text-xs font-medium">
-                   <span className="text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-3.5 w-3.5" /> {offer.expires}
-                   </span>
-                </div>
-              </div>
-
-              <Link 
-                href={offer.storeId ? `/stores/${offer.storeId}` : "/stores"} 
-                className="block w-full py-3 bg-primary/10 hover:bg-primary/20 text-primary text-center rounded-xl font-bold transition-colors"
-              >
-                 Claim Offer
-              </Link>
-            </div>
-          );
-        })}
+        {allOffers.map((offer: any, index: number) => (
+          <OfferCard key={offer.id} offer={offer} index={index} />
+        ))}
       </div>
 
       <div className="mt-20 bg-primary rounded-[3rem] p-12 text-center text-primary-foreground relative overflow-hidden">

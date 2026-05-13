@@ -79,6 +79,7 @@ export async function POST(req: Request) {
     });
 
     const storeIds = Object.keys(itemsByStore);
+    let fixedDiscountApplied = false;
     const createdOrders = [];
 
     for (const storeId of storeIds) {
@@ -101,14 +102,14 @@ export async function POST(req: Request) {
         });
 
         if (coupon) {
-          couponId = coupon.id;
           const subtotal = storeItems.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
           if (coupon.type === "PERCENTAGE") {
             discount = (subtotal * coupon.discount) / 100;
-          } else {
-            // If fixed amount, and it's a multi-store order, we might need a policy.
-            // For now, apply it to the first eligible store found.
+            couponId = coupon.id;
+          } else if (!fixedDiscountApplied) {
             discount = coupon.discount;
+            couponId = coupon.id;
+            fixedDiscountApplied = true;
           }
         }
       }

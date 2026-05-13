@@ -25,14 +25,40 @@ export default function CartPage() {
   const [paymentMethod, setPaymentMethod] = useState("CASH");
   const [error, setError] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [availableCoupons, setAvailableCoupons] = useState<any[]>([]);
 
-  const handleApplyCoupon = async () => {
-    if (!couponCode) return;
+  useEffect(() => {
+    const fetchCoupons = async () => {
+      if (items.length === 0) return;
+      const storeIds = Array.from(new Set(items.map((i: any) => i.storeId)));
+      try {
+        const res = await fetch("/api/coupons/applicable", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ storeIds }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setAvailableCoupons(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch coupons", err);
+      }
+    };
+    fetchCoupons();
+  }, [items]);
+
+  const handleApplyCoupon = async (codeOverride?: string) => {
+    const codeToUse = codeOverride || couponCode;
+    if (!codeToUse) return;
     try {
       const res = await fetch("/api/coupons/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: couponCode, storeId: items[0]?.storeId }),
+        body: JSON.stringify({ 
+          code: codeToUse, 
+          storeIds: Array.from(new Set(items.map((i: any) => i.storeId))) 
+        }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -235,8 +261,42 @@ export default function CartPage() {
           <div className="rounded-[2.5rem] border p-8 sticky top-24 space-y-6 bg-card shadow-xl shadow-primary/5">
             <h2 className="text-2xl font-bold">Order Summary</h2>
             
-            {/* Coupon Code */}
-            <div className="space-y-2">
+            {/* Available Offers Section */}
+            {availableCoupons.length > 0 && !appliedCoupon && (
+              <div className="space-y-4 pt-4 border-t">
+                 <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                   <Percent className="h-4 w-4" /> Available Offers
+                 </h3>
+                 <div className="flex flex-col gap-3">
+                   {availableCoupons.map((coupon) => (
+                     <button
+                       key={coupon.id}
+                       onClick={() => {
+                         setCouponCode(coupon.code);
+                         handleApplyCoupon(coupon.code);
+                       }}
+                       className="flex items-center justify-between p-4 rounded-2xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-all group text-left"
+                     >
+                       <div className="space-y-1">
+                          <p className="font-bold text-primary flex items-center gap-2">
+                             {coupon.code}
+                             <span className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full uppercase">
+                               {coupon.store?.name || "Global"}
+                             </span>
+                          </p>
+                          <p className="text-xs text-muted-foreground font-medium">
+                            {coupon.type === "PERCENTAGE" ? `${coupon.discount}%` : `$${coupon.discount}`} off your order
+                          </p>
+                       </div>
+                       <ChevronRight className="h-5 w-5 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                     </button>
+                   ))}
+                 </div>
+              </div>
+            )}
+
+            {/* Coupon Code Input */}
+            <div className="space-y-2 pt-4">
                <label className="text-sm font-bold text-muted-foreground">Have a coupon?</label>
                <div className="flex gap-2">
                   <input 

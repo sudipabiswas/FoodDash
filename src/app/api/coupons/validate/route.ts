@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const { code, storeId } = await req.json();
+    const { code, storeIds } = await req.json();
 
     if (!code) {
       return NextResponse.json({ error: "Coupon code is required" }, { status: 400 });
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
         isActive: true,
         expiryDate: { gte: new Date() },
         OR: [
-          { storeId: storeId },
+          { storeId: { in: storeIds || [] } },
           { storeId: null }
         ]
       }
