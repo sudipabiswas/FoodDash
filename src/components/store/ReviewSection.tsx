@@ -75,7 +75,7 @@ export default function ReviewSection({ storeId }: { storeId: string }) {
       <div className="grid lg:grid-cols-3 gap-12">
         {/* Review Form */}
         <div className="lg:col-span-1">
-          {session?.user?.role === "CUSTOMER" ? (
+          {(session?.user as any)?.role === "CUSTOMER" ? (
             <div className="bg-card border rounded-[2.5rem] p-8 sticky top-24 shadow-xl shadow-primary/5">
               <h3 className="text-xl font-bold mb-6">Leave a Review</h3>
               <form onSubmit={handleSubmit} className="space-y-6">
