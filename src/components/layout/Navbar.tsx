@@ -147,6 +147,12 @@ export default function Navbar() {
           {(session?.user as any)?.role === "CUSTOMER" && (
             <Link href="/orders" className="block text-sm font-medium">My Orders</Link>
           )}
+          <Link href="/cart" className="flex items-center justify-between text-sm font-medium group">
+            <span>My Cart</span>
+            <span className="h-5 w-5 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full group-active:scale-95 transition-transform">
+              {totalItems}
+            </span>
+          </Link>
           <Link href="/offers" className="block text-sm font-medium">Offers</Link>
           <Link href="/about" className="block text-sm font-medium">About</Link>
           

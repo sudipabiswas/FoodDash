@@ -2,11 +2,14 @@
 
 import { useCart } from "@/components/cart/CartProvider";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function CartPage() {
   const { items, removeItem, addItem, totalPrice, clearCart } = useCart();
+  const { data: session } = useSession();
+  const router = useRouter();
   const [isOrdering, setIsOrdering] = useState(false);
   const [createdOrders, setCreatedOrders] = useState<any[]>([]);
   const [orderComplete, setOrderComplete] = useState(false);
@@ -278,12 +281,21 @@ export default function CartPage() {
             )}
 
             <button 
-              onClick={handleCheckout}
+              onClick={() => {
+                if (!session) {
+                  router.push("/login?callbackUrl=/cart");
+                  return;
+                }
+                handleCheckout();
+              }}
               disabled={isOrdering}
               className="w-full py-5 bg-primary text-primary-foreground rounded-2xl font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-xl shadow-primary/20"
             >
               {isOrdering ? "Processing Order..." : (
-                <>Place Order <ArrowRight className="h-5 w-5" /></>
+                <>
+                  {!session ? "Login to Checkout" : "Place Order"} 
+                  <ArrowRight className="h-5 w-5" />
+                </>
               )}
             </button>
             
