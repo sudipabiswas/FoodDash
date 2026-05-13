@@ -4,8 +4,10 @@ import Image from "next/image";
 import { Star, Clock, Info, ShoppingBag } from "lucide-react";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import StoreSideCart from "@/components/cart/StoreSideCart";
+import ReviewSection from "@/components/store/ReviewSection";
 
 export default async function StoreMenuPage(props: { params: Promise<{ id: string }> }) {
+  // ... (rest of the code)
   const params = await props.params;
   const store = await prisma.store.findUnique({
     where: { id: params.id },
@@ -22,8 +24,7 @@ export default async function StoreMenuPage(props: { params: Promise<{ id: strin
 
   return (
     <div className="pb-20">
-      {/* Store Header */}
-      {/* ... (existing header) */}
+      {/* ... (existing code for header and menu) */}
       <div className="h-80 relative overflow-hidden">
          {store.image ? (
            <img 
@@ -66,7 +67,6 @@ export default async function StoreMenuPage(props: { params: Promise<{ id: strin
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar with Categories & Cart */}
           <aside className="lg:w-80 space-y-8 sticky top-24 h-fit hidden lg:block">
             <StoreSideCart 
               storeId={store.id} 
@@ -90,7 +90,6 @@ export default async function StoreMenuPage(props: { params: Promise<{ id: strin
             </div>
           </aside>
 
-          {/* Menu Items */}
           <div className="flex-1 space-y-12">
             {store.categories.map((category: any) => (
               <section key={category.id} id={category.id} className="scroll-mt-24">
@@ -129,9 +128,13 @@ export default async function StoreMenuPage(props: { params: Promise<{ id: strin
                 </div>
               </section>
             ))}
+
+            {/* Review Section */}
+            <ReviewSection storeId={store.id} />
           </div>
         </div>
       </div>
     </div>
   );
 }
+
