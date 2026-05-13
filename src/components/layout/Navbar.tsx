@@ -67,7 +67,7 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-4">
-            {status === "authenticated" && (session?.user as any)?.role === "CUSTOMER" && !pathname?.startsWith("/store-dashboard") && (
+            {!pathname?.startsWith("/store-dashboard") && (session?.user as any)?.role !== "STORE_OWNER" && (
               <>
                 <form onSubmit={handleSearch} className="hidden sm:flex items-center relative group">
                   <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
@@ -80,12 +80,24 @@ export default function Navbar() {
                   />
                 </form>
                 
-                <Link href="/cart" className="relative p-2 hover:bg-muted rounded-full transition-colors">
-                  <ShoppingCart className="h-5 w-5" />
-                  <span className="absolute top-0 right-0 h-4 w-4 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full">
-                    {totalItems}
-                  </span>
-                </Link>
+                {status === "authenticated" ? (
+                  <Link href="/cart" className="relative p-2 hover:bg-muted rounded-full transition-colors">
+                    <ShoppingCart className="h-5 w-5" />
+                    <span className="absolute top-0 right-0 h-4 w-4 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full">
+                      {totalItems}
+                    </span>
+                  </Link>
+                ) : (
+                  <button 
+                    onClick={() => router.push("/login?callbackUrl=/cart&message=Please login to view your cart")}
+                    className="relative p-2 hover:bg-muted rounded-full transition-colors"
+                  >
+                    <ShoppingCart className="h-5 w-5" />
+                    <span className="absolute top-0 right-0 h-4 w-4 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full">
+                      0
+                    </span>
+                  </button>
+                )}
               </>
             )}
 
@@ -144,16 +156,28 @@ export default function Navbar() {
       {isMenuOpen && (
         <div className="md:hidden border-t bg-background px-4 py-4 space-y-4">
           <Link href="/stores" className="block text-sm font-medium">Browse Stores</Link>
-          {(session?.user as any)?.role === "CUSTOMER" && (
-            <>
-              <Link href="/orders" className="block text-sm font-medium">My Orders</Link>
-              <Link href="/cart" className="flex items-center justify-between text-sm font-medium group">
-                <span>My Cart</span>
-                <span className="h-5 w-5 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full group-active:scale-95 transition-transform">
-                  {totalItems}
-                </span>
-              </Link>
-            </>
+          {status === "authenticated" ? (
+            (session?.user as any)?.role === "CUSTOMER" && (
+              <>
+                <Link href="/orders" className="block text-sm font-medium">My Orders</Link>
+                <Link href="/cart" className="flex items-center justify-between text-sm font-medium group">
+                  <span>My Cart</span>
+                  <span className="h-5 w-5 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full group-active:scale-95 transition-transform">
+                    {totalItems}
+                  </span>
+                </Link>
+              </>
+            )
+          ) : (
+            <button 
+              onClick={() => router.push("/login?callbackUrl=/cart&message=Please login to view your cart")}
+              className="flex items-center justify-between w-full text-sm font-medium group text-left"
+            >
+              <span>My Cart</span>
+              <span className="h-5 w-5 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full group-active:scale-95 transition-transform">
+                0
+              </span>
+            </button>
           )}
           <Link href="/offers" className="block text-sm font-medium">Offers</Link>
           <Link href="/about" className="block text-sm font-medium">About</Link>
