@@ -307,7 +307,7 @@ export default function CartPage() {
                     className="flex-1 px-4 py-3 rounded-xl border bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                   />
                   <button 
-                    onClick={handleApplyCoupon}
+                    onClick={() => handleApplyCoupon()}
                     className="px-4 py-2 bg-muted hover:bg-primary hover:text-primary-foreground rounded-xl font-bold transition-all"
                   >
                     Apply
