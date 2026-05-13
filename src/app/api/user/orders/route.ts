@@ -57,13 +57,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Group items by storeId
+    // Group items by their actual storeId fetched from the database for security and correctness
+    const productIds = items.map((i: any) => i.id);
+    const dbProducts = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, storeId: true }
+    });
+
     const itemsByStore: Record<string, any[]> = {};
     items.forEach((item: any) => {
-      if (!itemsByStore[item.storeId]) {
-        itemsByStore[item.storeId] = [];
+      const dbProduct = dbProducts.find(p => p.id === item.id);
+      const actualStoreId = dbProduct?.storeId || item.storeId;
+      
+      if (!itemsByStore[actualStoreId]) {
+        itemsByStore[actualStoreId] = [];
       }
-      itemsByStore[item.storeId].push(item);
+      itemsByStore[actualStoreId].push({
+        ...item,
+        storeId: actualStoreId // Ensure we use the correct one
+      });
     });
 
     const storeIds = Object.keys(itemsByStore);

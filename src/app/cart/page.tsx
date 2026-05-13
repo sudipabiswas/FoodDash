@@ -8,6 +8,7 @@ import { useState } from "react";
 export default function CartPage() {
   const { items, removeItem, addItem, totalPrice, clearCart } = useCart();
   const [isOrdering, setIsOrdering] = useState(false);
+  const [createdOrders, setCreatedOrders] = useState<any[]>([]);
   const [orderComplete, setOrderComplete] = useState(false);
   const [address, setAddress] = useState("");
   const [couponCode, setCouponCode] = useState("");
@@ -62,7 +63,6 @@ export default function CartPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items,
-          storeId: items[0].storeId,
           deliveryAddress: address,
           paymentMethod,
           couponCode,
@@ -74,6 +74,8 @@ export default function CartPage() {
         throw new Error(data.error || "Failed to place order");
       }
 
+      const orders = await response.json();
+      setCreatedOrders(orders);
       setOrderComplete(true);
       clearCart();
     } catch (err: any) {
@@ -84,15 +86,37 @@ export default function CartPage() {
   };
 
   if (orderComplete) {
-    // ... (keep success UI)
     return (
-      <div className="container mx-auto px-4 py-20 text-center">
+      <div className="container mx-auto px-4 py-20 text-center max-w-2xl">
         <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
            <ShoppingBag className="h-10 w-10" />
         </div>
         <h1 className="text-4xl font-bold mb-4">Order Placed Successfully!</h1>
-        <p className="text-muted-foreground mb-8 text-lg">Your food is being prepared and will be with you shortly.</p>
-        <Link href="/" className="px-8 py-3 bg-primary text-primary-foreground rounded-full font-bold">
+        <p className="text-muted-foreground mb-12 text-lg">
+          Your order has been split into **{createdOrders.length}** separate orders because you ordered from multiple restaurants.
+        </p>
+        
+        <div className="grid gap-4 mb-12">
+          {createdOrders.map((order) => (
+            <div key={order.id} className="p-6 bg-card border rounded-[2rem] flex flex-col sm:flex-row items-center justify-between gap-4">
+               <div className="text-left">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Order ID</p>
+                  <p className="font-mono text-sm">#{order.id.slice(-8).toUpperCase()}</p>
+               </div>
+               <div className="text-right flex items-center gap-4">
+                  <p className="font-extrabold text-primary text-xl">${order.totalPrice.toFixed(2)}</p>
+                  <Link 
+                    href={`/order-tracking/${order.id}`} 
+                    className="px-6 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground rounded-full text-sm font-bold transition-all"
+                  >
+                    Track Order
+                  </Link>
+               </div>
+            </div>
+          ))}
+        </div>
+
+        <Link href="/" className="px-12 py-4 bg-primary text-primary-foreground rounded-full font-bold text-lg shadow-xl shadow-primary/20 hover:scale-105 transition-all">
            Back to Home
         </Link>
       </div>
@@ -100,7 +124,6 @@ export default function CartPage() {
   }
 
   if (items.length === 0) {
-    // ... (keep empty UI)
     return (
       <div className="container mx-auto px-4 py-20 text-center">
         <h1 className="text-4xl font-bold mb-4">Your cart is empty</h1>
