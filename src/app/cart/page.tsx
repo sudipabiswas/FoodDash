@@ -26,6 +26,7 @@ export default function CartPage() {
   const [error, setError] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [availableCoupons, setAvailableCoupons] = useState<any[]>([]);
+  const [checkoutStep, setCheckoutStep] = useState(1); // 1: Cart/Address, 2: Review
 
   useEffect(() => {
     const fetchCoupons = async () => {
@@ -173,87 +174,142 @@ export default function CartPage() {
 
   return (
     <div className="container mx-auto px-4 py-12">
-      <h1 className="text-4xl font-bold mb-8 tracking-tight">Shopping Cart</h1>
+      <div className="flex items-center gap-4 mb-8">
+        <h1 className="text-4xl font-bold tracking-tight">Shopping Cart</h1>
+        <div className="flex items-center gap-2 bg-muted px-4 py-1.5 rounded-full text-sm font-bold">
+           <div className={`w-6 h-6 rounded-full flex items-center justify-center ${checkoutStep >= 1 ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/30'}`}>1</div>
+           <span>Details</span>
+           <div className="w-8 h-px bg-muted-foreground/30 mx-1"></div>
+           <div className={`w-6 h-6 rounded-full flex items-center justify-center ${checkoutStep >= 2 ? 'bg-primary text-primary-foreground' : 'bg-muted-foreground/30'}`}>2</div>
+           <span>Review</span>
+        </div>
+      </div>
       
       <div className="flex flex-col lg:flex-row gap-12">
         <div className="flex-1 space-y-8">
-          {/* Cart Items */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <ShoppingBag className="h-5 w-5" /> Your Items
-            </h2>
-            {items.map((item: any) => (
-              <div key={item.id} className="flex items-center gap-6 p-6 rounded-3xl border bg-card hover:shadow-lg transition-all">
-                <div className="w-24 h-24 bg-muted rounded-2xl flex-shrink-0 overflow-hidden border">
-                   {item.image ? (
-                     <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                   ) : (
-                     <div className="w-full h-full flex items-center justify-center">
-                        <ShoppingBag className="h-8 w-8 text-muted-foreground/30" />
-                     </div>
-                   )}
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold">{item.name}</h3>
-                  <p className="text-primary font-bold text-lg mt-1">${item.price.toFixed(2)}</p>
-                </div>
-                <div className="flex items-center gap-4 bg-muted/50 p-2 rounded-full px-4 border">
-                  <button 
-                    onClick={() => removeItem(item.id)}
-                    className="hover:text-primary transition-colors p-1"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <span className="font-bold w-4 text-center">{item.quantity}</span>
-                  <button 
-                     onClick={() => addItem({ ...item, quantity: 1 })}
-                     className="hover:text-primary transition-colors p-1"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
+          {checkoutStep === 1 ? (
+            <>
+              {/* Cart Items */}
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <ShoppingBag className="h-5 w-5" /> Your Items
+                </h2>
+                {items.map((item: any) => (
+                  <div key={item.id} className="flex items-center gap-6 p-6 rounded-3xl border bg-card hover:shadow-lg transition-all">
+                    <div className="w-24 h-24 bg-muted rounded-2xl flex-shrink-0 overflow-hidden border">
+                       {item.image ? (
+                         <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                       ) : (
+                         <div className="w-full h-full flex items-center justify-center">
+                            <ShoppingBag className="h-8 w-8 text-muted-foreground/30" />
+                         </div>
+                       )}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold">{item.name}</h3>
+                      <p className="text-primary font-bold text-lg mt-1">${item.price.toFixed(2)}</p>
+                    </div>
+                    <div className="flex items-center gap-4 bg-muted/50 p-2 rounded-full px-4 border">
+                      <button 
+                        onClick={() => removeItem(item.id)}
+                        className="hover:text-primary transition-colors p-1"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </button>
+                      <span className="font-bold w-4 text-center">{item.quantity}</span>
+                      <button 
+                         onClick={() => addItem({ ...item, quantity: 1 })}
+                         className="hover:text-primary transition-colors p-1"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {/* Checkout Details */}
-          <div className="grid md:grid-cols-2 gap-8">
-             <div className="space-y-4">
-                <h2 className="text-xl font-bold">Delivery Details</h2>
-                <textarea
-                  placeholder="Enter your full delivery address..."
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="w-full h-32 p-4 rounded-2xl border bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
-                />
-             </div>
-             
-             <div className="space-y-4">
-                <h2 className="text-xl font-bold">Payment Method</h2>
-                <div className="grid gap-3">
-                   {["CASH", "CARD"].map((method) => (
-                     <label 
-                       key={method} 
-                       className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all ${
-                         paymentMethod === method ? "bg-primary/5 border-primary text-primary" : "hover:bg-muted"
-                       }`}
-                     >
-                       <div className="flex items-center gap-3">
-                          <input 
-                            type="radio" 
-                            name="payment" 
-                            value={method} 
-                            checked={paymentMethod === method}
-                            onChange={(e) => setPaymentMethod(e.target.value)}
-                            className="w-4 h-4 accent-primary"
-                          />
-                          <span className="font-bold">{method === "CASH" ? "Cash on Delivery" : "Credit/Debit Card"}</span>
+              {/* Checkout Details */}
+              <div className="grid md:grid-cols-2 gap-8">
+                 <div className="space-y-4">
+                    <h2 className="text-xl font-bold">Delivery Details</h2>
+                    <textarea
+                      placeholder="Enter your full delivery address..."
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      className="w-full h-32 p-4 rounded-2xl border bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+                    />
+                 </div>
+                 
+                 <div className="space-y-4">
+                    <h2 className="text-xl font-bold">Payment Method</h2>
+                    <div className="grid gap-3">
+                       {["CASH", "CARD"].map((method) => (
+                         <label 
+                           key={method} 
+                           className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all ${
+                             paymentMethod === method ? "bg-primary/5 border-primary text-primary" : "hover:bg-muted"
+                           }`}
+                         >
+                           <div className="flex items-center gap-3">
+                              <input 
+                                type="radio" 
+                                name="payment" 
+                                value={method} 
+                                checked={paymentMethod === method}
+                                onChange={(e) => setPaymentMethod(e.target.value)}
+                                className="w-4 h-4 accent-primary"
+                              />
+                              <span className="font-bold">{method === "CASH" ? "Cash on Delivery" : "Credit/Debit Card"}</span>
+                           </div>
+                         </label>
+                       ))}
+                    </div>
+                 </div>
+              </div>
+            </>
+          ) : (
+            <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-500">
+               <div className="p-8 rounded-[2.5rem] border bg-muted/20">
+                  <h2 className="text-2xl font-bold mb-6">Confirm Your Order</h2>
+                  <div className="space-y-6">
+                     <div>
+                        <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-2">Delivery To</p>
+                        <p className="text-lg font-medium">{address}</p>
+                     </div>
+                     <div className="grid md:grid-cols-2 gap-8">
+                        <div>
+                           <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-2">Payment Method</p>
+                           <p className="font-bold text-primary">{paymentMethod === "CASH" ? "Cash on Delivery" : "Credit Card"}</p>
+                        </div>
+                        <div>
+                           <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-2">Total Items</p>
+                           <p className="font-bold">{items.reduce((sum: number, i: any) => sum + i.quantity, 0)} Items</p>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="space-y-4">
+                  <h3 className="text-xl font-bold">Order Breakdown</h3>
+                  {items.map((item: any) => (
+                    <div key={item.id} className="flex justify-between items-center py-3 border-b border-dashed">
+                       <div>
+                          <p className="font-bold">{item.name}</p>
+                          <p className="text-sm text-muted-foreground">{item.quantity}x @ ${item.price.toFixed(2)}</p>
                        </div>
-                     </label>
-                   ))}
-                </div>
-             </div>
-          </div>
+                       <p className="font-bold">${(item.price * item.quantity).toFixed(2)}</p>
+                    </div>
+                  ))}
+               </div>
+
+               <button 
+                 onClick={() => setCheckoutStep(1)}
+                 className="text-primary font-bold hover:underline"
+               >
+                  ← Go back to edit items
+               </button>
+            </div>
+          )}
         </div>
 
         {/* Order Summary */}
@@ -353,14 +409,22 @@ export default function CartPage() {
                   router.push("/login?callbackUrl=/cart");
                   return;
                 }
-                handleCheckout();
+                if (checkoutStep === 1) {
+                  if (!address.trim()) {
+                    setError("Please provide a delivery address");
+                    return;
+                  }
+                  setCheckoutStep(2);
+                } else {
+                  handleCheckout();
+                }
               }}
               disabled={isOrdering}
               className="w-full py-5 bg-primary text-primary-foreground rounded-2xl font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-xl shadow-primary/20"
             >
-              {isOrdering ? "Processing Order..." : (
+              {isOrdering ? "Processing..." : (
                 <>
-                  {!session ? "Login to Checkout" : "Place Order"} 
+                  {!session ? "Login to Checkout" : (checkoutStep === 1 ? "Review Order" : "Confirm & Place Order")} 
                   <ArrowRight className="h-5 w-5" />
                 </>
               )}
