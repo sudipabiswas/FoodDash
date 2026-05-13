@@ -1,13 +1,19 @@
 "use client";
 
-import { Clock, Store as StoreIcon, Copy, Check } from "lucide-react";
+import { Clock, Store as StoreIcon, Copy, Check, Percent, Tag } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
+const iconMap: Record<string, any> = {
+  percent: Percent,
+  tag: Tag,
+  clock: Clock,
+};
+
 export default function OfferCard({ offer, index }: { offer: any, index: number }) {
   const [copied, setCopied] = useState(false);
-  const Icon = offer.icon;
+  const Icon = iconMap[offer.icon] || Tag;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(offer.code);
