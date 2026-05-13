@@ -35,6 +35,17 @@ export async function GET(req: Request) {
       storeId: store.id,
       createdAt: { gte: startDate }
     },
+    include: {
+      items: {
+        include: {
+          product: {
+            include: {
+              category: true
+            }
+          }
+        }
+      }
+    }
   });
 
   // Fetch previous period orders for growth calculation
@@ -143,6 +154,15 @@ export async function GET(req: Request) {
     recentReviews,
     recentOrders,
     popularItems,
+    categoryDistribution: Object.entries(
+      currentOrders.reduce((acc: any, order: any) => {
+        order.items.forEach((item: any) => {
+          const catName = item.product?.category?.name || "Uncategorized";
+          acc[catName] = (acc[catName] || 0) + item.quantity;
+        });
+        return acc;
+      }, {})
+    ).map(([name, value]) => ({ name, value })),
     revenueDetails: currentOrders.map((o: any) => ({
        id: o.id,
        date: o.createdAt,

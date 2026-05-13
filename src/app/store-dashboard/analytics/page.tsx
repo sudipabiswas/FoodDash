@@ -81,13 +81,6 @@ export default function AnalyticsPage() {
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
-  const categoryData = [
-    { name: "Burgers", value: 400 },
-    { name: "Beverages", value: 300 },
-    { name: "Desserts", value: 200 },
-    { name: "Sides", value: 278 },
-  ];
-
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       <div className="flex justify-between items-center">
@@ -174,23 +167,34 @@ export default function AnalyticsPage() {
                   <ShoppingCart className="h-5 w-5 text-primary" /> Category Distribution
                </h2>
                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                     <PieChart>
-                        <Pie
-                          data={categoryData}
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {categoryData.map((entry: any, index: number) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend verticalAlign="bottom" height={36}/>
-                     </PieChart>
-                  </ResponsiveContainer>
+                  {loading ? (
+                    <div className="h-full flex items-center justify-center">
+                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                  ) : !data?.categoryDistribution || data.categoryDistribution.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-muted/20 rounded-3xl border border-dashed">
+                       <ShoppingCart className="h-8 w-8 text-muted-foreground/30 mb-2" />
+                       <p className="text-sm text-muted-foreground">No category data for this period.</p>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                       <PieChart>
+                          <Pie
+                            data={data.categoryDistribution}
+                            innerRadius={60}
+                            outerRadius={80}
+                            paddingAngle={5}
+                            dataKey="value"
+                          >
+                            {data.categoryDistribution.map((entry: any, index: number) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                          <Legend verticalAlign="bottom" height={36}/>
+                       </PieChart>
+                    </ResponsiveContainer>
+                  )}
                </div>
             </div>
           </div>
