@@ -10,31 +10,35 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { storeId, rating, comment } = await req.json();
+    const { orderId, rating, comment } = await req.json();
 
-    if (!storeId || !rating) {
-      return NextResponse.json({ error: "Store ID and rating are required" }, { status: 400 });
+    if (!orderId || !rating) {
+      return NextResponse.json({ error: "Order ID and rating are required" }, { status: 400 });
     }
 
-    // Check if user has already reviewed this store (optional, but good practice)
-    const existingReview = await prisma.review.findFirst({
-      where: {
-        storeId,
-        customerId: session.user.id
-      }
+    // Verify order exists, belongs to customer, and is DELIVERED
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { review: true }
     });
 
-    if (existingReview) {
-      // Update existing review instead of creating new one?
-      // For now, let's just create a new one or error out.
-      // The user said "can give both review and rating", so maybe multiple? 
-      // Usually one review per store is standard.
+    if (!order || order.customerId !== session.user.id) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    if (order.status !== "DELIVERED") {
+      return NextResponse.json({ error: "You can only review delivered orders" }, { status: 400 });
+    }
+
+    if (order.review) {
+      return NextResponse.json({ error: "You have already reviewed this order" }, { status: 400 });
     }
 
     const review = await prisma.review.create({
       data: {
-        storeId,
+        storeId: order.storeId,
         customerId: session.user.id,
+        orderId: order.id,
         rating: Number(rating),
         comment
       },
@@ -54,6 +58,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);

@@ -52,6 +52,11 @@ export default function Navbar() {
               <Link href="/stores" className="transition-colors hover:text-primary">
                 Browse Stores
               </Link>
+              {(session?.user as any)?.role === "CUSTOMER" && (
+                <Link href="/orders" className="transition-colors hover:text-primary">
+                  My Orders
+                </Link>
+              )}
               <Link href="/offers" className="transition-colors hover:text-primary">
                 Offers
               </Link>
@@ -139,6 +144,9 @@ export default function Navbar() {
       {isMenuOpen && (
         <div className="md:hidden border-t bg-background px-4 py-4 space-y-4">
           <Link href="/stores" className="block text-sm font-medium">Browse Stores</Link>
+          {(session?.user as any)?.role === "CUSTOMER" && (
+            <Link href="/orders" className="block text-sm font-medium">My Orders</Link>
+          )}
           <Link href="/offers" className="block text-sm font-medium">Offers</Link>
           <Link href="/about" className="block text-sm font-medium">About</Link>
           
