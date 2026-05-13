@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { AuthProvider } from "@/components/providers/SessionProvider";
+import { Toaster } from "react-hot-toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,6 +22,7 @@ export default function RootLayout({
     <html lang="en" className="h-full antialiased">
       <body className={`${inter.className} min-h-full flex flex-col`}>
         <AuthProvider>
+          <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
           <CartProvider>
             <Navbar />
             <main className="flex-1">

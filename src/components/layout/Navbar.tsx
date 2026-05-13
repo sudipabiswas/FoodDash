@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -89,7 +90,19 @@ export default function Navbar() {
                   </Link>
                 ) : (
                   <button 
-                    onClick={() => router.push("/login?callbackUrl=/cart&message=Please login to view your cart")}
+                    onClick={() => {
+                      toast.error("Please sign in first", {
+                        icon: '🔒',
+                        style: {
+                          borderRadius: '1rem',
+                          background: '#333',
+                          color: '#fff',
+                        },
+                      });
+                      setTimeout(() => {
+                        router.push("/login?callbackUrl=/cart");
+                      }, 800);
+                    }}
                     className="relative p-2 hover:bg-muted rounded-full transition-colors"
                   >
                     <ShoppingCart className="h-5 w-5" />
@@ -170,7 +183,14 @@ export default function Navbar() {
             )
           ) : (
             <button 
-              onClick={() => router.push("/login?callbackUrl=/cart&message=Please login to view your cart")}
+              onClick={() => {
+                toast.error("Please sign in first", {
+                  icon: '🔒',
+                });
+                setTimeout(() => {
+                  router.push("/login?callbackUrl=/cart");
+                }, 800);
+              }}
               className="flex items-center justify-between w-full text-sm font-medium group text-left"
             >
               <span>My Cart</span>
