@@ -1,9 +1,9 @@
 "use client";
 
 import { useCart } from "@/components/cart/CartProvider";
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Percent, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
