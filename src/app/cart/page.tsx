@@ -68,9 +68,18 @@ export default function CartPage() {
       const coupon = await res.json();
       setAppliedCoupon(coupon);
       setError("");
+      toast.success("Coupon applied successfully!", {
+        icon: '🎟️',
+        style: {
+          borderRadius: '1rem',
+          background: '#333',
+          color: '#fff',
+        },
+      });
     } catch (err: any) {
       setError(err.message);
       setAppliedCoupon(null);
+      toast.error(err.message);
     }
   };
 
@@ -370,10 +379,29 @@ export default function CartPage() {
                   </button>
                </div>
                {appliedCoupon && (
-                 <p className="text-xs text-green-600 font-bold">
-                   Coupon applied: {appliedCoupon.discount}{appliedCoupon.type === "PERCENTAGE" ? "%" : "$"} off!
-                 </p>
-               )}
+                  <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-xl animate-in zoom-in-95">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 bg-green-100 rounded-lg">
+                        <Percent className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-green-800 uppercase">{appliedCoupon.code}</p>
+                        <p className="text-[10px] text-green-600 font-medium">
+                          {appliedCoupon.type === "PERCENTAGE" ? `${appliedCoupon.discount}%` : `$${appliedCoupon.discount}`} discount applied
+                        </p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setAppliedCoupon(null);
+                        setCouponCode("");
+                      }}
+                      className="text-xs font-bold text-green-700 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
             </div>
 
             <div className="space-y-4 py-4 border-y border-dashed">
