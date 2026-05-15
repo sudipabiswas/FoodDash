@@ -182,74 +182,76 @@ export default function RiderDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
-      {/* 1. Top Bar (Status + Identity) */}
-      <div className="sticky top-0 z-50 bg-white border-b shadow-sm px-6 py-4">
-        <div className="container mx-auto max-w-lg flex items-center justify-between">
-          <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center border shadow-inner">
-                <Bike className="h-5 w-5 text-primary" />
-             </div>
-             <div>
-                <h3 className="font-black text-sm text-slate-900 flex items-center gap-1">
-                   {session?.user?.name || "Rider"} <span className="text-yellow-500 flex items-center text-[10px]"><Star className="h-3 w-3 fill-current" /> 4.7</span>
-                </h3>
-                <div className="flex items-center gap-2">
-                   <button 
-                     onClick={() => setIsOnline(!isOnline)}
-                     className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider transition-all ${
-                       isOnline ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                     }`}
-                   >
-                      <div className={`w-1.5 h-1.5 rounded-full ${isOnline ? "bg-green-500 animate-pulse" : "bg-red-500"}`} />
-                      {isOnline ? "Online" : "Offline"}
-                   </button>
-                   <button 
-                     onClick={() => setIsBusy(!isBusy)}
-                     className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider transition-all ${
-                       isBusy ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-slate-100 text-slate-500 border-transparent"
-                     } border`}
-                   >
-                      Busy Mode
-                   </button>
-                </div>
-             </div>
-          </div>
-          <div className="flex items-center gap-3">
-             <button className="relative w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center hover:bg-slate-100 transition-all">
-                <Bell className="h-5 w-5 text-slate-600" />
-                {availableOrders.length > 0 && isOnline && (
-                   <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
-                )}
-             </button>
-             <button onClick={() => setActiveTab("earnings")} className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-2xl border border-primary/20 hover:bg-primary/20 transition-all">
-                <Wallet className="h-4 w-4 text-primary" />
-                <span className="font-black text-primary text-sm">${todayEarnings.toFixed(0)}</span>
-             </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto max-w-lg p-6 space-y-6">
-        
-        {/* 6. Map Mini View (Optional but powerful) */}
-        {isOnline && activeOrders.length === 0 && (
-          <div className="relative h-32 w-full bg-slate-200 rounded-[2rem] overflow-hidden border shadow-inner">
-             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80&w=1000')] bg-cover opacity-50 contrast-125 saturate-0" />
-             <div className="absolute inset-0 bg-primary/5" />
-             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                <div className="relative">
-                   <div className="absolute -inset-4 bg-primary/20 blur-xl rounded-full animate-ping" />
-                   <div className="relative w-8 h-8 bg-primary rounded-full border-4 border-white shadow-xl flex items-center justify-center">
-                      <Bike className="h-4 w-4 text-white" />
+        {activeTab === "home" && (
+          <>
+            {/* 1. Top Bar (Status + Identity) */}
+            <div className="sticky top-0 z-50 bg-white border-b shadow-sm px-6 py-4 -mx-6 -mt-6 mb-6">
+              <div className="container mx-auto max-w-lg flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center border shadow-inner">
+                      <Bike className="h-5 w-5 text-primary" />
+                   </div>
+                   <div>
+                      <h3 className="font-black text-sm text-slate-900 flex items-center gap-1">
+                         {session?.user?.name || "Rider"} <span className="text-yellow-500 flex items-center text-[10px]"><Star className="h-3 w-3 fill-current" /> 4.7</span>
+                      </h3>
+                      <div className="flex items-center gap-2">
+                         <button 
+                           onClick={() => setIsOnline(!isOnline)}
+                           className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider transition-all ${
+                             isOnline ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                           }`}
+                         >
+                            <div className={`w-1.5 h-1.5 rounded-full ${isOnline ? "bg-green-500 animate-pulse" : "bg-red-500"}`} />
+                            {isOnline ? "Online" : "Offline"}
+                         </button>
+                         <button 
+                           onClick={() => setIsBusy(!isBusy)}
+                           className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider transition-all ${
+                             isBusy ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-slate-100 text-slate-500 border-transparent"
+                           } border`}
+                         >
+                            Busy Mode
+                         </button>
+                      </div>
                    </div>
                 </div>
-             </div>
-             <div className="absolute bottom-3 left-6 flex items-center gap-2">
-                <div className="px-3 py-1 bg-white/90 backdrop-blur rounded-full text-[10px] font-black text-slate-800 shadow-sm flex items-center gap-1.5">
-                   <Target className="h-3 w-3 text-primary" /> Dhaka City Zone
+                <div className="flex items-center gap-3">
+                   <button className="relative w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center hover:bg-slate-100 transition-all">
+                      <Bell className="h-5 w-5 text-slate-600" />
+                      {availableOrders.length > 0 && isOnline && (
+                         <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
+                      )}
+                   </button>
+                   <button onClick={() => setActiveTab("growth")} className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-2xl border border-primary/20 hover:bg-primary/20 transition-all">
+                      <Wallet className="h-4 w-4 text-primary" />
+                      <span className="font-black text-primary text-sm">${todayEarnings.toFixed(0)}</span>
+                   </button>
                 </div>
-             </div>
-          </div>
+              </div>
+            </div>
+
+            {/* 6. Map Mini View */}
+            {isOnline && activeOrders.length === 0 && (
+              <div className="relative h-32 w-full bg-slate-200 rounded-[2rem] overflow-hidden border shadow-inner mb-6">
+                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80&w=1000')] bg-cover opacity-50 contrast-125 saturate-0" />
+                 <div className="absolute inset-0 bg-primary/5" />
+                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <div className="relative">
+                       <div className="absolute -inset-4 bg-primary/20 blur-xl rounded-full animate-ping" />
+                       <div className="relative w-8 h-8 bg-primary rounded-full border-4 border-white shadow-xl flex items-center justify-center">
+                          <Bike className="h-4 w-4 text-white" />
+                       </div>
+                    </div>
+                 </div>
+                 <div className="absolute bottom-3 left-6 flex items-center gap-2">
+                    <div className="px-3 py-1 bg-white/90 backdrop-blur rounded-full text-[10px] font-black text-slate-800 shadow-sm flex items-center gap-1.5">
+                       <Target className="h-3 w-3 text-primary" /> Dhaka City Zone
+                    </div>
+                 </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* 2. Main Screen = Order Feed (Core Section) */}
@@ -393,95 +395,6 @@ export default function RiderDashboard() {
                   </div>
                </div>
              ))}
-          </div>
-        ) : (
-          /* Incoming Order Feed */
-          <div className="space-y-6">
-             <div className="flex items-center justify-between px-2">
-                <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Live Order Feed</h2>
-                <div className="flex items-center gap-1">
-                   <div className="w-1 h-1 bg-primary rounded-full animate-ping" />
-                   <span className="text-[9px] font-black text-primary uppercase">Searching...</span>
-                </div>
-             </div>
-
-             {availableOrders.length === 0 ? (
-               <div className="bg-white border border-dashed rounded-[3rem] p-16 text-center space-y-4">
-                  <div className="relative w-16 h-16 mx-auto">
-                     <div className="absolute inset-0 bg-primary/10 rounded-full animate-ping" />
-                     <Clock className="relative h-16 w-16 text-primary/20 mx-auto" />
-                  </div>
-                  <h3 className="text-xl font-black text-slate-900 tracking-tight">Looking for orders...</h3>
-                  <p className="text-slate-500 text-sm font-medium">Keep the app open and stay in the zone to receive the next job offer.</p>
-               </div>
-             ) : (
-               <div className="space-y-4">
-                  {availableOrders.map(order => {
-                    const timer = timers[order.id] || 0;
-                    if (timer <= 0) return null;
-
-                    return (
-                      <div key={order.id} className="relative bg-white border border-slate-200 rounded-[2.5rem] p-6 shadow-lg shadow-slate-200/50 hover:border-primary/30 transition-all animate-in slide-in-from-right duration-500">
-                         {/* Expiry Timer Bar */}
-                         <div className="absolute top-0 left-8 right-8 h-1 bg-slate-100 rounded-full overflow-hidden">
-                            <div 
-                              className={`h-full transition-all duration-1000 ${timer < 5 ? "bg-red-500" : "bg-primary"}`}
-                              style={{ width: `${(timer / 15) * 100}%` }}
-                            />
-                         </div>
-
-                         <div className="flex justify-between items-start pt-2">
-                            <div className="flex items-center gap-3">
-                               <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center border">
-                                  <Truck className="h-6 w-6 text-slate-400" />
-                               </div>
-                               <div>
-                                  <h4 className="font-black text-lg leading-tight text-slate-900">{order.store?.name}</h4>
-                                  <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                     {order.items?.length || 0} Items • <span className="text-primary">{timer}s left</span>
-                                  </div>
-                               </div>
-                            </div>
-                            <div className="text-right">
-                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Earn</p>
-                               <p className="text-2xl font-black text-green-600">${(Number(order.deliveryCharge ?? order.store?.deliveryCharge) || 0).toFixed(2)}</p>
-                            </div>
-                         </div>
-
-                         <div className="grid grid-cols-3 gap-3 my-6">
-                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                               <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Pickup</p>
-                               <p className="font-black text-xs text-slate-900">{distances[order.id]?.pickup || "1.2 km"}</p>
-                            </div>
-                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                               <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Drop</p>
-                               <p className="font-black text-xs text-slate-900">{distances[order.id]?.drop || "3.5 km"}</p>
-                            </div>
-                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                               <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Est. Time</p>
-                               <p className="font-black text-xs text-slate-900">{distances[order.id]?.time || "25 min"}</p>
-                            </div>
-                         </div>
-
-                         <div className="flex items-center gap-3">
-                            <button 
-                              onClick={() => handleAcceptOrder(order.id)}
-                              className="flex-[2] py-4 bg-primary text-primary-foreground rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/20"
-                            >
-                               Accept
-                            </button>
-                            <button className="flex-1 py-4 bg-slate-100 text-slate-400 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-200 hover:text-slate-600 transition-all">
-                               Decline
-                            </button>
-                         </div>
-                      </div>
-                    );
-                  })}
-               </div>
-             )}
-          </div>
-        )}
-
         {activeTab === "home" && (
           <>
             {/* 4. Earnings Snapshot (Mini Dashboard) */}
