@@ -38,6 +38,8 @@ model Store {
   deliveryZone   String?
   deliveryCharge Float    @default(0)
   mainCategories String[] @default([]) // Burgers, Pizza, Sushi, Desserts, Coffee, Healthy
+  latitude       Float?
+  longitude      Float?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -89,6 +91,8 @@ model Order {
   couponId        String?
   coupon          Coupon?     @relation(fields: [couponId], references: [id])
   deliveryAddress String
+  deliveryLat     Float?
+  deliveryLng     Float?
   deliveryCharge  Float       @default(0)
   items           OrderItem[]
   review          Review?

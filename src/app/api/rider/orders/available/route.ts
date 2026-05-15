@@ -17,7 +17,7 @@ export async function GET() {
       },
       include: {
         store: {
-          select: { name: true, image: true, deliveryCharge: true }
+          select: { name: true, image: true, deliveryCharge: true, latitude: true, longitude: true }
         },
         items: {
           include: { product: true }

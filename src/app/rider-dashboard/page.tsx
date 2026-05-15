@@ -31,6 +31,10 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useSession, signOut } from "next-auth/react";
+import dynamic from "next/dynamic";
+import { calculateDistance } from "@/lib/distance";
+
+const MapTracker = dynamic(() => import("@/components/map/MapTracker"), { ssr: false });
 
 function RiderDashboardContent() {
   const { data: session } = useSession();
@@ -43,6 +47,11 @@ function RiderDashboardContent() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(tabParam || "home");
   const [period, setPeriod] = useState("daily");
+  
+  // Hardcoded Rider position (e.g. Central Dhaka) for testing if geolocation isn't available
+  const [riderPos, setRiderPos] = useState<[number, number]>([23.8120, 90.4100]);
+  const [distances, setDistances] = useState<Record<string, { pickup: number, drop: number, total: number, allowance: number }>>({});
+  const [timers, setTimers] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (tabParam && tabParam !== activeTab) {
@@ -57,8 +66,6 @@ function RiderDashboardContent() {
   const [isOnline, setIsOnline] = useState(true);
   const [isBusy, setIsBusy] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [distances, setDistances] = useState<Record<string, { pickup: string, drop: string, time: string }>>({});
-  const [timers, setTimers] = useState<Record<string, number>>({});
 
   useEffect(() => {
     setIsMounted(true);
@@ -68,15 +75,38 @@ function RiderDashboardContent() {
   }, []);
 
   useEffect(() => {
-    if (availableOrders.length > 0) {
+    if (availableOrders.length > 0 || myTasks.length > 0) {
       const newDistances = { ...distances };
       const newTimers = { ...timers };
-      availableOrders.forEach(order => {
+      
+      const allOrders = [...availableOrders, ...myTasks];
+      
+      allOrders.forEach(order => {
         if (!newDistances[order.id]) {
+          const storeLat = order.store?.latitude;
+          const storeLng = order.store?.longitude;
+          const custLat = order.deliveryLat;
+          const custLng = order.deliveryLng;
+          
+          let pickupDist = 0;
+          let dropDist = 0;
+          
+          if (storeLat && storeLng) {
+            pickupDist = calculateDistance(riderPos[0], riderPos[1], storeLat, storeLng);
+          }
+          if (storeLat && storeLng && custLat && custLng) {
+            dropDist = calculateDistance(storeLat, storeLng, custLat, custLng);
+          }
+          
+          const totalDist = pickupDist + dropDist;
+          // Charge $1.50 per km allowance
+          const calculatedAllowance = Math.max(2.5, totalDist * 1.5); // Minimum 2.5
+          
           newDistances[order.id] = {
-            pickup: `${(Math.random() * 2 + 0.5).toFixed(1)} km`,
-            drop: `${(Math.random() * 5 + 1).toFixed(1)} km`,
-            time: `${Math.floor(Math.random() * 15 + 15)} min`
+            pickup: pickupDist,
+            drop: dropDist,
+            total: totalDist,
+            allowance: calculatedAllowance
           };
           newTimers[order.id] = 100;
         }
@@ -84,7 +114,7 @@ function RiderDashboardContent() {
       setDistances(newDistances);
       setTimers(newTimers);
     }
-  }, [availableOrders]);
+  }, [availableOrders, myTasks, riderPos]);
 
   useEffect(() => {
     const timerId = setInterval(() => {
@@ -183,8 +213,8 @@ function RiderDashboardContent() {
   const activeOrders = Array.isArray(myTasks) ? myTasks.filter(o => o.status !== "DELIVERED" && o.status !== "CANCELLED") : [];
   const completedOrders = Array.isArray(myTasks) ? myTasks.filter(o => o.status === "DELIVERED") : [];
   const todayEarnings = completedOrders.filter(o => new Date(o.createdAt).toDateString() === new Date().toDateString())
-                                      .reduce((sum, o) => sum + (Number(o.deliveryCharge ?? o.store?.deliveryCharge) || 0), 0);
-  const weekEarnings = completedOrders.reduce((sum, o) => sum + (Number(o.deliveryCharge ?? o.store?.deliveryCharge) || 0), 0);
+                                      .reduce((sum, o) => sum + (distances[o.id]?.allowance || 2.50), 0);
+  const weekEarnings = completedOrders.reduce((sum, o) => sum + (distances[o.id]?.allowance || 2.50), 0);
 
   if (!isMounted || loading) {
     return (
@@ -253,15 +283,17 @@ function RiderDashboardContent() {
             </div>
 
             {/* 2. Mini Map / Zone Awareness */}
-            <div className="relative h-44 bg-slate-100 rounded-[3rem] border-4 border-white shadow-2xl overflow-hidden mb-10 group">
-               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80&w=1000')] bg-cover opacity-50 contrast-125 saturate-0 group-hover:scale-110 transition-transform duration-[20s]" />
-               <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-white/60" />
-               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-2xl border-4 border-white animate-bounce">
-                     <Bike className="h-5 w-5 text-white" />
-                  </div>
-               </div>
-               <div className="absolute bottom-4 left-6 px-4 py-2 bg-white/90 backdrop-blur rounded-full border shadow-xl flex items-center gap-2">
+            <div className="relative h-64 bg-slate-100 rounded-[3rem] border-4 border-white shadow-2xl overflow-hidden mb-10 z-0">
+               {activeOrders.length > 0 ? (
+                 <MapTracker 
+                   riderPos={riderPos} 
+                   storePos={activeOrders[0].store?.latitude ? [activeOrders[0].store.latitude, activeOrders[0].store.longitude] : undefined}
+                   customerPos={activeOrders[0].deliveryLat ? [activeOrders[0].deliveryLat, activeOrders[0].deliveryLng] : undefined}
+                 />
+               ) : (
+                 <MapTracker riderPos={riderPos} />
+               )}
+               <div className="absolute bottom-4 left-6 px-4 py-2 bg-white/90 backdrop-blur rounded-full border shadow-xl flex items-center gap-2 z-[400]">
                   <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
                   <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Dhaka City Zone</span>
                </div>
@@ -305,9 +337,11 @@ function RiderDashboardContent() {
                                </div>
                                <span className="font-black text-white/70">#{order.id.slice(-6).toUpperCase()}</span>
                             </div>
-                            <div className="font-black text-2xl">${(Number(order.deliveryCharge ?? order.store?.deliveryCharge) || 0).toFixed(2)}</div>
+                            <div className="text-right">
+                               <div className="font-black text-2xl">${distances[order.id]?.allowance?.toFixed(2) || "2.50"}</div>
+                               <div className="text-[10px] font-black text-white/70 uppercase tracking-widest">Allowance</div>
+                            </div>
                          </div>
-                         {/* Step Tracker */}
                          <div className="flex items-center justify-between px-2 mb-2">
                             {["ACCEPTED", "PREPARING", "OUT_FOR_DELIVERY", "DELIVERED"].map((status, idx, arr) => {
                               const steps = ["ACCEPTED", "PREPARING", "OUT_FOR_DELIVERY", "DELIVERED"];
@@ -337,7 +371,10 @@ function RiderDashboardContent() {
                                <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500"><Package className="h-5 w-5" /></div>
                                <div className="flex-1">
                                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pickup From</p>
-                                  <h4 className="font-black text-lg leading-tight">{order.store?.name}</h4>
+                                  <div className="flex justify-between items-center">
+                                    <h4 className="font-black text-lg leading-tight">{order.store?.name}</h4>
+                                    <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-full">{distances[order.id]?.pickup?.toFixed(1) || "..."} km</span>
+                                  </div>
                                   <div className="flex gap-2 mt-3">
                                      <button className="flex-1 py-3 bg-slate-100 text-slate-900 rounded-xl font-bold text-xs flex items-center justify-center gap-2"><Phone className="h-3 w-3" /> Call Shop</button>
                                      <button className="flex-1 py-3 bg-slate-100 text-slate-900 rounded-xl font-bold text-xs flex items-center justify-center gap-2"><Navigation className="h-3 w-3" /> Navigate</button>
@@ -348,7 +385,10 @@ function RiderDashboardContent() {
                                <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500"><MapPin className="h-5 w-5" /></div>
                                <div className="flex-1">
                                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Deliver To</p>
-                                  <h4 className="font-black text-lg leading-tight">{order.customer?.name}</h4>
+                                  <div className="flex justify-between items-start gap-4">
+                                    <h4 className="font-black text-lg leading-tight">{order.customer?.name}</h4>
+                                    <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-full whitespace-nowrap">{distances[order.id]?.drop?.toFixed(1) || "..."} km</span>
+                                  </div>
                                   <p className="text-xs font-medium text-slate-500 mt-1">{order.deliveryAddress}</p>
                                   <div className="flex gap-2 mt-3">
                                      <button className="flex-1 py-3 bg-slate-100 text-slate-900 rounded-xl font-bold text-xs flex items-center justify-center gap-2"><Phone className="h-3 w-3" /> Call Customer</button>
@@ -389,7 +429,6 @@ function RiderDashboardContent() {
                  ) : (
                    availableOrders.map(order => {
                      const timer = timers[order.id] || 0;
-                     if (timer <= 0) return null;
                      return (
                        <div key={order.id} className="relative bg-white border border-slate-200 rounded-[2.5rem] p-6 shadow-lg shadow-slate-200/50 hover:border-primary/30 transition-all">
                           <div className="absolute top-0 left-8 right-8 h-1 bg-slate-100 rounded-full overflow-hidden">
@@ -405,13 +444,13 @@ function RiderDashboardContent() {
                              </div>
                              <div className="text-right">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Earn</p>
-                                <p className="text-2xl font-black text-green-600">${(Number(order.deliveryCharge ?? order.store?.deliveryCharge) || 0).toFixed(2)}</p>
+                                <p className="text-2xl font-black text-green-600">${distances[order.id]?.allowance?.toFixed(2) || "2.50"}</p>
                              </div>
                           </div>
                           <div className="grid grid-cols-3 gap-3 my-6">
-                             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100"><p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Pickup</p><p className="font-black text-xs text-slate-900">{distances[order.id]?.pickup || "1.2 km"}</p></div>
-                             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100"><p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Drop</p><p className="font-black text-xs text-slate-900">{distances[order.id]?.drop || "3.5 km"}</p></div>
-                             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100"><p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Est. Time</p><p className="font-black text-xs text-slate-900">{distances[order.id]?.time || "25 min"}</p></div>
+                             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100"><p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Pickup</p><p className="font-black text-xs text-slate-900">{distances[order.id]?.pickup?.toFixed(1) || "0.0"} km</p></div>
+                             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100"><p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Drop</p><p className="font-black text-xs text-slate-900">{distances[order.id]?.drop?.toFixed(1) || "0.0"} km</p></div>
+                             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100"><p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Total</p><p className="font-black text-xs text-slate-900">{distances[order.id]?.total?.toFixed(1) || "0.0"} km</p></div>
                           </div>
                           <div className="flex items-center gap-3">
                              <button onClick={() => handleAcceptOrder(order.id)} className="flex-[2] py-4 bg-primary text-primary-foreground rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/20">Accept</button>
@@ -424,7 +463,6 @@ function RiderDashboardContent() {
               </div>
             )}
 
-            {/* Earnings & Performance Snapshots */}
             <div className="bg-slate-900 text-white rounded-[3rem] p-10 space-y-8 shadow-2xl shadow-slate-900/30 overflow-hidden relative">
                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[60px] rounded-full -mr-16 -mt-16" />
                <div className="flex justify-between items-start relative z-10">
@@ -520,11 +558,12 @@ function RiderDashboardContent() {
                                    </div>
                                 </div>
                                 <div className="text-right">
-                                   <p className="font-black text-green-600">${(Number(o.deliveryCharge ?? o.store?.deliveryCharge) || 0).toFixed(2)}</p>
-                                   <div className="flex items-center gap-1 text-[9px] font-black text-green-600 uppercase tracking-widest justify-end mt-1">
-                                      <CheckCircle2 className="h-3 w-3" /> Delivered
-                                   </div>
+                                   <span className="font-bold text-lg">${distances[o.id]?.allowance?.toFixed(2) || "2.50"}</span>
                                 </div>
+                             </div>
+                             <div className="flex justify-between items-center text-xs text-slate-500 font-medium">
+                                <span>Est. Distance</span>
+                                <span>{distances[o.id]?.total?.toFixed(1) || "0.0"} km</span>
                              </div>
                              <div className="flex items-start gap-2 pt-3 border-t border-slate-200/50">
                                 <MapPin className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />

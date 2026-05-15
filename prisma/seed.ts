@@ -42,6 +42,8 @@ async function main() {
       description: "Home of the Whopper. Flame-grilled beef and more.",
       ownerId: owner.id,
       active: true,
+      latitude: 23.8103,
+      longitude: 90.4125,
     },
   });
 
@@ -92,6 +94,8 @@ async function main() {
       totalPrice: 18.97,
       status: "DELIVERED",
       deliveryAddress: "123 Maple St, Springfield",
+      deliveryLat: 23.8200,
+      deliveryLng: 90.4200,
       items: {
         create: [
           { productId: dbProducts[0].id, quantity: 2, price: 6.99 },
@@ -108,6 +112,8 @@ async function main() {
       totalPrice: 11.98,
       status: "DELIVERED",
       deliveryAddress: "456 Oak Ave, Springfield",
+      deliveryLat: 23.8050,
+      deliveryLng: 90.4100,
       items: {
         create: [
           { productId: dbProducts[2].id, quantity: 2, price: 5.99 },
@@ -123,6 +129,8 @@ async function main() {
       totalPrice: 6.99,
       status: "PENDING",
       deliveryAddress: "123 Maple St, Springfield",
+      deliveryLat: 23.8150,
+      deliveryLng: 90.4050,
       items: {
         create: [
           { productId: dbProducts[0].id, quantity: 1, price: 6.99 },

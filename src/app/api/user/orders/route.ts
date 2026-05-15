@@ -51,9 +51,9 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { items, deliveryAddress, paymentMethod, couponCode } = await req.json();
+    const { items, deliveryAddress, deliveryLat, deliveryLng, paymentMethod, couponCode } = await req.json();
 
-    if (!items || items.length === 0 || !deliveryAddress) {
+    if (!items || items.length === 0 || !deliveryAddress || deliveryLat === undefined || deliveryLng === undefined) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
@@ -128,6 +128,8 @@ export async function POST(req: Request) {
           customerId: session.user.id,
           storeId,
           deliveryAddress,
+          deliveryLat,
+          deliveryLng,
           paymentMethod,
           couponId,
           discount,

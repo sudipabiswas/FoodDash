@@ -7,6 +7,9 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import dynamic from "next/dynamic";
+
+const MapLocationPicker = dynamic(() => import("@/components/map/MapLocationPicker"), { ssr: false });
 
 export default function CartPage() {
   const { items, removeItem, addItem, totalPrice, clearCart } = useCart();
@@ -22,6 +25,8 @@ export default function CartPage() {
   const [createdOrders, setCreatedOrders] = useState<any[]>([]);
   const [orderComplete, setOrderComplete] = useState(false);
   const [address, setAddress] = useState("");
+  const [deliveryLat, setDeliveryLat] = useState<number | null>(null);
+  const [deliveryLng, setDeliveryLng] = useState<number | null>(null);
   const [couponCode, setCouponCode] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("CASH");
   const [error, setError] = useState("");
@@ -100,6 +105,10 @@ export default function CartPage() {
       setError("Please provide a delivery address");
       return;
     }
+    if (!deliveryLat || !deliveryLng) {
+      setError("Please pinpoint your delivery location on the map");
+      return;
+    }
     
     setIsOrdering(true);
     setError("");
@@ -111,6 +120,8 @@ export default function CartPage() {
         body: JSON.stringify({
           items,
           deliveryAddress: address,
+          deliveryLat,
+          deliveryLng,
           paymentMethod,
           couponCode,
         }),
@@ -242,12 +253,24 @@ export default function CartPage() {
               <div className="grid md:grid-cols-2 gap-8">
                  <div className="space-y-4">
                     <h2 className="text-xl font-bold">Delivery Details</h2>
-                    <textarea
-                      placeholder="Enter your full delivery address..."
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      className="w-full h-32 p-4 rounded-2xl border bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
-                    />
+                    <div className="space-y-3">
+                      <p className="text-sm font-medium text-muted-foreground">1. Set Location on Map</p>
+                      <MapLocationPicker 
+                        onLocationSelect={(lat, lng) => {
+                          setDeliveryLat(lat);
+                          setDeliveryLng(lng);
+                        }} 
+                      />
+                    </div>
+                    <div className="space-y-3 pt-2">
+                      <p className="text-sm font-medium text-muted-foreground">2. Apartment, Suite, etc.</p>
+                      <textarea
+                        placeholder="Enter your full delivery address..."
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        className="w-full h-32 p-4 rounded-2xl border bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+                      />
+                    </div>
                  </div>
                  
                  <div className="space-y-4">
