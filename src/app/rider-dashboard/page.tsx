@@ -60,7 +60,7 @@ export default function RiderDashboard() {
             drop: `${(Math.random() * 5 + 1).toFixed(1)} km`,
             time: `${Math.floor(Math.random() * 15 + 15)} min`
           };
-          newTimers[order.id] = 15;
+          newTimers[order.id] = 100;
         }
       });
       setDistances(newDistances);
@@ -375,7 +375,7 @@ export default function RiderDashboard() {
                      return (
                        <div key={order.id} className="relative bg-white border border-slate-200 rounded-[2.5rem] p-6 shadow-lg shadow-slate-200/50 hover:border-primary/30 transition-all">
                           <div className="absolute top-0 left-8 right-8 h-1 bg-slate-100 rounded-full overflow-hidden">
-                             <div className={`h-full transition-all duration-1000 ${timer < 5 ? "bg-red-500" : "bg-primary"}`} style={{ width: `${(timer / 15) * 100}%` }} />
+                             <div className={`h-full transition-all duration-1000 ${timer < 10 ? "bg-red-500" : "bg-primary"}`} style={{ width: `${timer}%` }} />
                           </div>
                           <div className="flex justify-between items-start pt-2">
                              <div className="flex items-center gap-3">
