@@ -146,7 +146,7 @@ export default function RiderDashboard() {
   const completedOrders = Array.isArray(myTasks) ? myTasks.filter(o => o.status === "DELIVERED") : [];
   const todayEarnings = completedOrders.filter(o => new Date(o.createdAt).toDateString() === new Date().toDateString())
                                       .reduce((sum, o) => sum + (Number(o.deliveryCharge ?? o.store?.deliveryCharge) || 0), 0);
-  const weekEarnings = totalEarnings = completedOrders.reduce((sum, o) => sum + (Number(o.deliveryCharge ?? o.store?.deliveryCharge) || 0), 0);
+  const weekEarnings = completedOrders.reduce((sum, o) => sum + (Number(o.deliveryCharge ?? o.store?.deliveryCharge) || 0), 0);
 
   if (!isMounted || loading) {
     return (
