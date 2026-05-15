@@ -50,26 +50,39 @@ export default function Navbar() {
               </span>
             </Link>
             <div className="hidden md:flex items-center space-x-6 text-sm font-medium">
-              <Link href="/stores" className="transition-colors hover:text-primary">
-                Browse Stores
-              </Link>
-              {(session?.user as any)?.role === "CUSTOMER" && (
-                <Link href="/orders" className="transition-colors hover:text-primary">
-                  My Orders
-                </Link>
+              {(session?.user as any)?.role === "DELIVERY_MAN" ? (
+                <>
+                  <Link href="/rider-dashboard" className="transition-colors hover:text-primary flex items-center gap-1">
+                    Dashboard
+                  </Link>
+                  <Link href="/rider-dashboard?tab=growth" className="transition-colors hover:text-primary">
+                    Earnings
+                  </Link>
+                  <Link href="/rider-dashboard?tab=badge" className="transition-colors hover:text-primary">
+                    Duty Record
+                  </Link>
+                  <Link href="/about" className="transition-colors hover:text-primary">
+                    About
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/stores" className="transition-colors hover:text-primary">
+                    Browse Stores
+                  </Link>
+                  {(session?.user as any)?.role === "CUSTOMER" && (
+                    <Link href="/orders" className="transition-colors hover:text-primary">
+                      My Orders
+                    </Link>
+                  )}
+                  <Link href="/offers" className="transition-colors hover:text-primary">
+                    Offers
+                  </Link>
+                  <Link href="/about" className="transition-colors hover:text-primary">
+                    About
+                  </Link>
+                </>
               )}
-              {(session?.user as any)?.role === "DELIVERY_MAN" && (
-                <Link href="/rider-dashboard" className="transition-colors hover:text-primary flex items-center gap-1">
-                  <Bike className="h-4 w-4" />
-                  Rider Dashboard
-                </Link>
-              )}
-              <Link href="/offers" className="transition-colors hover:text-primary">
-                Offers
-              </Link>
-              <Link href="/about" className="transition-colors hover:text-primary">
-                About
-              </Link>
             </div>
           </div>
 
@@ -182,39 +195,50 @@ export default function Navbar() {
       {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="md:hidden border-t bg-background px-4 py-4 space-y-4">
-          <Link href="/stores" className="block text-sm font-medium">Browse Stores</Link>
-          {status === "authenticated" ? (
-            (session?.user as any)?.role === "CUSTOMER" && (
-              <>
-                <Link href="/orders" className="block text-sm font-medium">My Orders</Link>
-                <Link href="/cart" className="flex items-center justify-between text-sm font-medium group">
+          {(session?.user as any)?.role === "DELIVERY_MAN" ? (
+            <>
+              <Link href="/rider-dashboard" className="block text-sm font-medium" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
+              <Link href="/rider-dashboard?tab=growth" className="block text-sm font-medium" onClick={() => setIsMenuOpen(false)}>Earnings</Link>
+              <Link href="/rider-dashboard?tab=badge" className="block text-sm font-medium" onClick={() => setIsMenuOpen(false)}>Duty Record</Link>
+              <Link href="/about" className="block text-sm font-medium" onClick={() => setIsMenuOpen(false)}>About</Link>
+            </>
+          ) : (
+            <>
+              <Link href="/stores" className="block text-sm font-medium">Browse Stores</Link>
+              {status === "authenticated" ? (
+                (session?.user as any)?.role === "CUSTOMER" && (
+                  <>
+                    <Link href="/orders" className="block text-sm font-medium">My Orders</Link>
+                    <Link href="/cart" className="flex items-center justify-between text-sm font-medium group">
+                      <span>My Cart</span>
+                      <span className="h-5 w-5 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full group-active:scale-95 transition-transform">
+                        {totalItems}
+                      </span>
+                    </Link>
+                  </>
+                )
+              ) : (
+                <button 
+                  onClick={() => {
+                    toast.error("Please sign in first", {
+                      icon: '🔒',
+                    });
+                    setTimeout(() => {
+                      router.push("/login?callbackUrl=/cart");
+                    }, 800);
+                  }}
+                  className="flex items-center justify-between w-full text-sm font-medium group text-left"
+                >
                   <span>My Cart</span>
                   <span className="h-5 w-5 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full group-active:scale-95 transition-transform">
-                    {totalItems}
+                    0
                   </span>
-                </Link>
-              </>
-            )
-          ) : (
-            <button 
-              onClick={() => {
-                toast.error("Please sign in first", {
-                  icon: '🔒',
-                });
-                setTimeout(() => {
-                  router.push("/login?callbackUrl=/cart");
-                }, 800);
-              }}
-              className="flex items-center justify-between w-full text-sm font-medium group text-left"
-            >
-              <span>My Cart</span>
-              <span className="h-5 w-5 bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center rounded-full group-active:scale-95 transition-transform">
-                0
-              </span>
-            </button>
+                </button>
+              )}
+              <Link href="/offers" className="block text-sm font-medium">Offers</Link>
+              <Link href="/about" className="block text-sm font-medium">About</Link>
+            </>
           )}
-          <Link href="/offers" className="block text-sm font-medium">Offers</Link>
-          <Link href="/about" className="block text-sm font-medium">About</Link>
           
           <div className="pt-2 border-t space-y-3">
             {status === "authenticated" ? (
