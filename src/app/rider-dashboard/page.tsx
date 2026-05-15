@@ -24,7 +24,9 @@ import {
   Map as MapIcon,
   ShieldCheck,
   Zap,
-  Target
+  Target,
+  Settings,
+  ClipboardList
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useSession, signOut } from "next-auth/react";
@@ -477,34 +479,50 @@ export default function RiderDashboard() {
            </div>
         )}
 
-        {activeTab === "badge" && (
+        {activeTab === "dutyrecord" && (
            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-white border rounded-[3rem] p-12 text-center space-y-6 shadow-xl shadow-slate-200/50">
-                 <div className="relative w-32 h-32 mx-auto">
-                    <div className="absolute inset-0 bg-yellow-400/20 blur-3xl rounded-full animate-pulse" />
-                    <div className="relative w-32 h-32 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-2xl border-4 border-white"><Award className="h-16 w-16 text-white" /></div>
+              <div className="bg-white border rounded-[3rem] p-8 space-y-6 shadow-xl shadow-slate-200/50">
+                 <div className="flex justify-between items-center px-2">
+                    <h3 className="font-black text-slate-900 uppercase tracking-widest text-xs">Past Deliveries</h3>
+                    <div className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest">{completedOrders.length} Total</div>
                  </div>
-                 <div className="space-y-2">
-                    <h2 className="text-3xl font-black text-slate-900 tracking-tighter">Silver Elite</h2>
-                    <p className="text-slate-500 font-medium">Top 5% Rider in Dhaka North</p>
-                 </div>
-                 <div className="flex justify-center gap-2">
-                    {[1,2,3,4,5].map(i => (<Star key={i} className={`h-6 w-6 ${i <= 4 ? "text-yellow-400 fill-current" : "text-slate-200"}`} />))}
-                 </div>
-              </div>
-              <div className="grid gap-4">
-                 <div className="bg-white border rounded-[2rem] p-8 flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer">
-                    <div className="flex items-center gap-4">
-                       <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-500"><Zap className="h-6 w-6" /></div>
-                       <div><p className="font-black text-slate-900">Flash Delivery</p><p className="text-xs text-slate-500 font-medium">Deliver 5 orders under 20 mins</p></div>
+                 
+                 {completedOrders.length === 0 ? (
+                    <div className="py-12 text-center text-slate-400 font-medium">No deliveries completed yet.</div>
+                 ) : (
+                    <div className="space-y-4">
+                       {completedOrders.map(o => (
+                          <div key={o.id} className="p-5 bg-slate-50 rounded-[2rem] border border-slate-100 space-y-4 hover:border-slate-300 transition-colors">
+                             <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                   <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border shadow-sm text-slate-500">
+                                      <Package className="h-5 w-5" />
+                                   </div>
+                                   <div>
+                                      <p className="font-black text-slate-900">{o.store?.name}</p>
+                                      <p className="text-[10px] font-bold text-slate-500 uppercase">{new Date(o.createdAt).toLocaleString()}</p>
+                                   </div>
+                                </div>
+                                <div className="text-right">
+                                   <p className="font-black text-green-600">${(Number(o.deliveryCharge ?? o.store?.deliveryCharge) || 0).toFixed(2)}</p>
+                                   <div className="flex items-center gap-1 text-[9px] font-black text-green-600 uppercase tracking-widest justify-end mt-1">
+                                      <CheckCircle2 className="h-3 w-3" /> Delivered
+                                   </div>
+                                </div>
+                             </div>
+                             <div className="flex items-start gap-2 pt-3 border-t border-slate-200/50">
+                                <MapPin className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
+                                <p className="text-xs font-medium text-slate-600 line-clamp-2">{o.deliveryAddress}</p>
+                             </div>
+                          </div>
+                       ))}
                     </div>
-                    <div className="text-[10px] font-black text-purple-500 uppercase">3/5 Done</div>
-                 </div>
+                 )}
               </div>
            </div>
         )}
 
-        {activeTab === "more" && (
+        {activeTab === "settings" && (
            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="bg-white border rounded-[3rem] p-8 space-y-6 shadow-xl shadow-slate-200/50">
                  <div className="flex items-center gap-6">
@@ -544,8 +562,8 @@ export default function RiderDashboard() {
          <div className="container mx-auto max-w-lg flex items-center justify-between">
             <button onClick={() => setActiveTab("home")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "home" ? "text-primary scale-110" : "text-slate-400 hover:text-slate-600"}`}><Bike className="h-6 w-6" /><span className="text-[8px] font-black uppercase tracking-widest">Home</span></button>
             <button onClick={() => setActiveTab("growth")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "growth" ? "text-primary scale-110" : "text-slate-400 hover:text-slate-600"}`}><TrendingUp className="h-6 w-6" /><span className="text-[8px] font-black uppercase tracking-widest">Growth</span></button>
-            <button onClick={() => setActiveTab("badge")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "badge" ? "text-primary scale-110" : "text-slate-400 hover:text-slate-600"}`}><Award className="h-6 w-6" /><span className="text-[8px] font-black uppercase tracking-widest">Badge</span></button>
-            <button onClick={() => setActiveTab("more")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "more" ? "text-primary scale-110" : "text-slate-400 hover:text-slate-600"}`}><MoreVertical className="h-6 w-6" /><span className="text-[8px] font-black uppercase tracking-widest">More</span></button>
+            <button onClick={() => setActiveTab("dutyrecord")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "dutyrecord" ? "text-primary scale-110" : "text-slate-400 hover:text-slate-600"}`}><ClipboardList className="h-6 w-6" /><span className="text-[8px] font-black uppercase tracking-widest">Duty Record</span></button>
+            <button onClick={() => setActiveTab("settings")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "settings" ? "text-primary scale-110" : "text-slate-400 hover:text-slate-600"}`}><Settings className="h-6 w-6" /><span className="text-[8px] font-black uppercase tracking-widest">Settings</span></button>
          </div>
       </div>
     </div>

@@ -144,14 +144,6 @@ export default function Navbar() {
                     <LayoutDashboard className="h-4 w-4" />
                     <span>Dashboard</span>
                   </Link>
-                ) : (session?.user as any)?.role === "DELIVERY_MAN" ? (
-                  <Link 
-                    href="/rider-dashboard" 
-                    className="hidden sm:flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-full text-sm font-bold transition-all"
-                  >
-                    <Bike className="h-4 w-4" />
-                    <span>Rider View</span>
-                  </Link>
                 ) : null}
                 
                 <div className="flex items-center gap-2">
