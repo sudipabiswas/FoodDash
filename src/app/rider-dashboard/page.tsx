@@ -481,55 +481,118 @@ export default function RiderDashboard() {
           </div>
         )}
 
-        {/* 4. Earnings Snapshot (Mini Dashboard) */}
-        <div className="bg-slate-900 text-white rounded-[3rem] p-10 space-y-8 shadow-2xl shadow-slate-900/30 overflow-hidden relative">
-           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[60px] rounded-full -mr-16 -mt-16" />
-           <div className="flex justify-between items-start relative z-10">
-              <div>
-                 <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-2">Today's Earnings</p>
-                 <h3 className="text-5xl font-black text-white tracking-tighter">${todayEarnings.toFixed(2)}</h3>
-              </div>
-              <div className="bg-white/10 p-3 rounded-2xl">
-                 <Wallet className="h-6 w-6 text-primary" />
-              </div>
-           </div>
+        {activeTab === "home" && (
+          <>
+            {/* 4. Earnings Snapshot (Mini Dashboard) */}
+            <div className="bg-slate-900 text-white rounded-[3rem] p-10 space-y-8 shadow-2xl shadow-slate-900/30 overflow-hidden relative">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[60px] rounded-full -mr-16 -mt-16" />
+               <div className="flex justify-between items-start relative z-10">
+                  <div>
+                     <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-2">Today's Earnings</p>
+                     <h3 className="text-5xl font-black text-white tracking-tighter">${todayEarnings.toFixed(2)}</h3>
+                  </div>
+                  <div className="bg-white/10 p-3 rounded-2xl">
+                     <Wallet className="h-6 w-6 text-primary" />
+                  </div>
+               </div>
 
-           <div className="grid grid-cols-2 gap-6 relative z-10">
-              <div className="space-y-1">
-                 <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">This Week</p>
-                 <p className="text-xl font-black text-white/90">${weekEarnings.toFixed(2)}</p>
-              </div>
-              <div className="space-y-1 text-right">
-                 <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Completed</p>
-                 <p className="text-xl font-black text-white/90">{completedOrders.length}</p>
-              </div>
-              <div className="space-y-1">
-                 <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Pending Payout</p>
-                 <p className="text-xl font-black text-primary">$50.00</p>
-              </div>
-              <div className="flex items-end justify-end">
-                 <button className="px-4 py-2 bg-primary text-primary-foreground rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all">
-                    Withdraw
-                 </button>
-              </div>
-           </div>
-        </div>
+               <div className="grid grid-cols-2 gap-6 relative z-10">
+                  <div className="space-y-1">
+                     <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">This Week</p>
+                     <p className="text-xl font-black text-white/90">${weekEarnings.toFixed(2)}</p>
+                  </div>
+                  <div className="space-y-1 text-right">
+                     <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Completed</p>
+                     <p className="text-xl font-black text-white/90">{completedOrders.length}</p>
+                  </div>
+                  <div className="space-y-1">
+                     <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Pending Payout</p>
+                     <p className="text-xl font-black text-primary">$50.00</p>
+                  </div>
+                  <div className="flex items-end justify-end">
+                     <button className="px-4 py-2 bg-primary text-primary-foreground rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all">
+                        Withdraw
+                     </button>
+                  </div>
+               </div>
+            </div>
+
+            {/* Performance Highlights (Mini) */}
+            <div className="grid grid-cols-2 gap-4">
+               <div className="bg-white border rounded-[2rem] p-6 space-y-4">
+                  <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500">
+                     <Zap className="h-5 w-5" />
+                  </div>
+                  <div>
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">On-Time %</p>
+                     <p className="text-2xl font-black text-slate-900">98.2%</p>
+                  </div>
+               </div>
+               <div className="bg-white border rounded-[2rem] p-6 space-y-4">
+                  <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-500">
+                     <ShieldCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Safety Score</p>
+                     <p className="text-2xl font-black text-slate-900">4.9</p>
+                  </div>
+               </div>
+            </div>
+          </>
+        )}
 
         {/* Growth View */}
         {activeTab === "growth" && (
            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-white border rounded-[3rem] p-10 space-y-6 shadow-xl shadow-slate-200/50">
-                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">Financial Health</h2>
-                 <div className="grid grid-cols-2 gap-4">
-                    <div className="p-6 bg-green-50 rounded-[2rem] border border-green-100">
-                       <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">Available for Cashout</p>
-                       <p className="text-3xl font-black text-green-700">${(todayEarnings + weekEarnings).toFixed(2)}</p>
+              <div className="flex bg-slate-100 p-1.5 rounded-[2rem] border">
+                 {["daily", "weekly", "monthly"].map(p => (
+                   <button 
+                     key={p}
+                     onClick={() => setPeriod(p)}
+                     className={`flex-1 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+                       period === p ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                     }`}
+                   >
+                      {p}
+                   </button>
+                 ))}
+              </div>
+
+              <div className="bg-white border rounded-[3rem] p-10 space-y-8 shadow-xl shadow-slate-200/50">
+                 <div className="flex justify-between items-start">
+                    <div>
+                       <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">{period} Net Income</h2>
+                       <p className="text-5xl font-black text-slate-900 tracking-tighter">
+                          ${period === "daily" ? todayEarnings.toFixed(2) : period === "weekly" ? weekEarnings.toFixed(2) : (weekEarnings * 4.2).toFixed(2)}
+                       </p>
                     </div>
-                    <div className="p-6 bg-blue-50 rounded-[2rem] border border-blue-100">
-                       <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Target Monthly</p>
-                       <p className="text-3xl font-black text-blue-700">$500</p>
+                    <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                       <TrendingUp className="h-6 w-6 text-primary" />
                     </div>
                  </div>
+
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Deliveries</p>
+                       <p className="text-2xl font-black text-slate-900">{period === "daily" ? completedOrders.filter(o => new Date(o.createdAt).toDateString() === new Date().toDateString()).length : completedOrders.length}</p>
+                    </div>
+                    <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Incentives</p>
+                       <p className="text-2xl font-black text-green-600">$0.00</p>
+                    </div>
+                 </div>
+
+                 <div className="pt-6 border-t border-dashed space-y-4">
+                    <div className="flex justify-between items-center">
+                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Base Pay</span>
+                       <span className="font-bold text-slate-900 text-sm">${period === "daily" ? todayEarnings.toFixed(2) : weekEarnings.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Tips (Est.)</span>
+                       <span className="font-bold text-slate-900 text-sm">$0.00</span>
+                    </div>
+                 </div>
+
                  <button className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-xl shadow-slate-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
                     Withdraw to Bank
                  </button>
