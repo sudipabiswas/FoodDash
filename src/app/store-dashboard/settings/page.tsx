@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Save, Store, Truck, Info, CheckCircle2, ImagePlus, Loader2, MapPin } from "lucide-react";
+import { Save, Store, Truck, Info, CheckCircle2, ImagePlus, Loader2, MapPin, Search } from "lucide-react";
 import dynamic from "next/dynamic";
+import toast, { Toaster } from "react-hot-toast";
 
 const MapLocationPicker = dynamic(() => import("@/components/map/MapLocationPicker"), { ssr: false });
 
@@ -27,6 +28,9 @@ export default function StoreSettingsPage() {
 
   // Track whether we have a confirmed pin (separate from the form store state)
   const [hasPinnedLocation, setHasPinnedLocation] = useState(false);
+  const [geocodeStatus, setGeocodeStatus] = useState<"idle" | "searching" | "found" | "vague" | "notfound">("idle");
+  const [flyToPosition, setFlyToPosition] = useState<[number, number] | null>(null);
+  const geocodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fetchStore();
@@ -40,12 +44,53 @@ export default function StoreSettingsPage() {
         setStore(data);
         if (data.latitude && data.longitude) {
           setHasPinnedLocation(true);
+          setFlyToPosition([data.latitude, data.longitude]);
         }
       }
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const geocodeAddress = async (address: string) => {
+    if (address.trim().length < 8) return;
+    setGeocodeStatus("searching");
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=5&addressdetails=1`;
+      const res = await fetch(url, { headers: { "Accept-Language": "en" } });
+      const results = await res.json();
+
+      if (!results || results.length === 0) {
+        setGeocodeStatus("notfound");
+        toast.error("Address not found. Please include street, area, and city.", { icon: "📍" });
+        return;
+      }
+
+      const best = results[0];
+      const importance = parseFloat(best.importance ?? "0");
+
+      // Vague if importance is low (broad region) or multiple very different results exist
+      if (importance < 0.4 && results.length > 2) {
+        setGeocodeStatus("vague");
+        toast(
+          "Address is too vague. Please include a house/building number, street name, and city for a precise pin.",
+          { icon: "⚠️", duration: 5000 }
+        );
+        return;
+      }
+
+      const lat = parseFloat(best.lat);
+      const lng = parseFloat(best.lon);
+      setFlyToPosition([lat, lng]);
+      setStore(prev => ({ ...prev, latitude: lat, longitude: lng }));
+      setHasPinnedLocation(true);
+      setGeocodeStatus("found");
+      toast.success(`Pinned: ${best.display_name.split(",").slice(0, 3).join(",")}`, { duration: 3000 });
+    } catch (err) {
+      setGeocodeStatus("idle");
+      toast.error("Geocoding failed. Check your connection.");
     }
   };
 
@@ -192,13 +237,39 @@ export default function StoreSettingsPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-muted-foreground">Shop Address</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-3 rounded-xl border bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  value={store.address || ""}
-                  onChange={(e) => setStore({ ...store, address: e.target.value })}
-                  placeholder="e.g. 123 Main St, New York, NY 10030"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 pr-10 rounded-xl border bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    value={store.address || ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setStore({ ...store, address: val });
+                      setGeocodeStatus("idle");
+                      // Debounced geocoding
+                      if (geocodeTimer.current) clearTimeout(geocodeTimer.current);
+                      if (val.trim().length >= 8) {
+                        geocodeTimer.current = setTimeout(() => geocodeAddress(val), 800);
+                      }
+                    }}
+                    placeholder="e.g. 123 Motijheel, Dhaka, Bangladesh"
+                  />
+                  <div className="absolute right-3 top-3.5">
+                    {geocodeStatus === "searching" && (
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    )}
+                    {geocodeStatus === "found" && (
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    )}
+                    {(geocodeStatus === "vague" || geocodeStatus === "notfound") && (
+                      <span className="text-amber-500 text-xs font-bold">?</span>
+                    )}
+                    {geocodeStatus === "idle" && store.address && (
+                      <Search className="h-4 w-4 text-muted-foreground/40" />
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">Type your address — the map will automatically find and pin it.</p>
               </div>
               
               <div className="space-y-4">
@@ -339,6 +410,7 @@ export default function StoreSettingsPage() {
                   ? [store.latitude, store.longitude]
                   : [23.8103, 90.4125]
               }
+              flyToPosition={flyToPosition}
               onLocationSelect={(lat, lng) => {
                 setStore({ ...store, latitude: lat, longitude: lng });
                 setHasPinnedLocation(true);
@@ -346,6 +418,8 @@ export default function StoreSettingsPage() {
             />
           </div>
         </div>
+
+        <Toaster position="top-center" />
 
         <div className="flex items-center justify-between pt-4">
            {message && (
