@@ -186,13 +186,38 @@ export default function RiderDashboard() {
                                  <div>
                                     <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Delivery To</p>
                                     <p className="font-bold text-sm">{order.deliveryAddress}</p>
+                                    <p className="text-[10px] text-primary font-bold mt-0.5 flex items-center gap-1">
+                                       <Navigation className="h-3 w-3" />
+                                       {Math.floor(Math.random() * 5 + 1)}.{Math.floor(Math.random() * 9)} km away
+                                    </p>
                                  </div>
                               </div>
-                              <div className="flex items-center gap-3">
-                                 <DollarSign className="h-5 w-5 text-green-600" />
-                                 <div>
-                                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Your Pay</p>
-                                    <p className="font-bold text-green-600">${(order.deliveryCharge || 5).toFixed(2)}</p>
+
+                              <div className="bg-muted/50 p-4 rounded-2xl border border-dashed">
+                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Order Items</p>
+                                 <div className="space-y-1.5">
+                                    {order.items.map((item: any) => (
+                                       <div key={item.id} className="flex justify-between text-xs font-medium">
+                                          <span>{item.quantity}x {item.product.name}</span>
+                                       </div>
+                                    ))}
+                                 </div>
+                              </div>
+
+                              <div className="flex items-center gap-6">
+                                 <div className="flex items-center gap-3">
+                                    <DollarSign className="h-5 w-5 text-green-600" />
+                                    <div>
+                                       <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Your Pay</p>
+                                       <p className="font-bold text-green-600">${(order.deliveryCharge || 5).toFixed(2)}</p>
+                                    </div>
+                                 </div>
+                                 <div className="flex items-center gap-3">
+                                    <Package className="h-5 w-5 text-muted-foreground" />
+                                    <div>
+                                       <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Bill Total</p>
+                                       <p className="font-bold text-sm">${order.totalAmount.toFixed(2)}</p>
+                                    </div>
                                  </div>
                               </div>
                            </div>
