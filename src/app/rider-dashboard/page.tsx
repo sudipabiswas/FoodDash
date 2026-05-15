@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   Bike, 
   Package, 
@@ -15,36 +15,71 @@ import {
   TrendingUp,
   Award,
   Wallet,
-  ArrowRight
+  ArrowRight,
+  Bell,
+  Star,
+  Power,
+  Phone,
+  MoreVertical,
+  Map as MapIcon,
+  ShieldCheck,
+  Zap,
+  Target
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useSession } from "next-auth/react";
 
 export default function RiderDashboard() {
+  const { data: session } = useSession();
   const [availableOrders, setAvailableOrders] = useState<any[]>([]);
   const [myTasks, setMyTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("available"); // available, active, completed
+  const [activeTab, setActiveTab] = useState("home"); // home, earnings, performance
+  const [isOnline, setIsOnline] = useState(true);
+  const [isBusy, setIsBusy] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [distances, setDistances] = useState<Record<string, string>>({});
+  const [distances, setDistances] = useState<Record<string, { pickup: string, drop: string, time: string }>>({});
+  const [timers, setTimers] = useState<Record<string, number>>({});
 
   useEffect(() => {
     setIsMounted(true);
     fetchOrders();
-    const interval = setInterval(fetchOrders, 30000);
+    const interval = setInterval(fetchOrders, 10000); // Faster refresh for "Gig" feel
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     if (availableOrders.length > 0) {
       const newDistances = { ...distances };
+      const newTimers = { ...timers };
       availableOrders.forEach(order => {
         if (!newDistances[order.id]) {
-          newDistances[order.id] = `${(Math.random() * 5 + 1).toFixed(1)} km`;
+          newDistances[order.id] = {
+            pickup: `${(Math.random() * 2 + 0.5).toFixed(1)} km`,
+            drop: `${(Math.random() * 5 + 1).toFixed(1)} km`,
+            time: `${Math.floor(Math.random() * 15 + 15)} min`
+          };
+          newTimers[order.id] = 15; // 15 second timer
         }
       });
       setDistances(newDistances);
+      setTimers(newTimers);
     }
   }, [availableOrders]);
+
+  // Handle timers
+  useEffect(() => {
+    const timerId = setInterval(() => {
+      setTimers(prev => {
+        const next = { ...prev };
+        Object.keys(next).forEach(id => {
+          if (next[id] > 0) next[id] -= 1;
+        });
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(timerId);
+  }, []);
 
   const fetchOrders = async () => {
     try {
@@ -77,36 +112,14 @@ export default function RiderDashboard() {
       });
 
       if (res.ok) {
-        toast.success("Mission accepted! Let's go.");
+        toast.success("Order accepted! Head to restaurant.");
         fetchOrders();
-        setActiveTab("active");
       } else {
         const data = await res.json();
-        toast.error(data.error || "Failed to claim mission");
+        toast.error(data.error || "Missed it!");
       }
     } catch (err) {
       toast.error("Connectivity issue");
-    }
-  };
-
-  const handleCancelAssignment = async (orderId: string) => {
-    if (!confirm("Release this mission? It will be available for other riders.")) return;
-
-    try {
-      const res = await fetch("/api/rider/orders/cancel-assignment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId }),
-      });
-
-      if (res.ok) {
-        toast.success("Mission released");
-        fetchOrders();
-      } else {
-        toast.error("Failed to release");
-      }
-    } catch (err) {
-      toast.error("Action failed");
     }
   };
 
@@ -119,7 +132,7 @@ export default function RiderDashboard() {
       });
 
       if (res.ok) {
-        toast.success(`Status: ${status.replace(/_/g, ' ')}`);
+        toast.success(`Status updated: ${status.replace(/_/g, ' ')}`);
         fetchOrders();
       } else {
         toast.error("Update failed");
@@ -131,342 +144,425 @@ export default function RiderDashboard() {
 
   const activeOrders = Array.isArray(myTasks) ? myTasks.filter(o => o.status !== "DELIVERED" && o.status !== "CANCELLED") : [];
   const completedOrders = Array.isArray(myTasks) ? myTasks.filter(o => o.status === "DELIVERED") : [];
-  const totalEarnings = completedOrders.reduce((sum, o) => sum + (Number(o.deliveryCharge ?? o.store?.deliveryCharge) || 0), 0);
+  const todayEarnings = completedOrders.filter(o => new Date(o.createdAt).toDateString() === new Date().toDateString())
+                                      .reduce((sum, o) => sum + (Number(o.deliveryCharge ?? o.store?.deliveryCharge) || 0), 0);
+  const weekEarnings = totalEarnings = completedOrders.reduce((sum, o) => sum + (Number(o.deliveryCharge ?? o.store?.deliveryCharge) || 0), 0);
 
   if (!isMounted || loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0f172a]">
-        <div className="relative">
-          <div className="h-24 w-24 rounded-full border-t-4 border-primary animate-spin"></div>
-          <Bike className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-8 w-8 text-primary animate-bounce" />
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="animate-bounce">
+          <Bike className="h-12 w-12 text-primary" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-200 selection:bg-primary/30">
-      {/* Mesh Gradient Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-primary/20 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute top-[20%] -right-[5%] w-[30%] h-[30%] bg-blue-500/10 blur-[100px] rounded-full" />
-        <div className="absolute -bottom-[10%] left-[20%] w-[50%] h-[50%] bg-indigo-500/10 blur-[150px] rounded-full" />
+    <div className="min-h-screen bg-slate-50 pb-24">
+      {/* 1. Top Bar (Status + Identity) */}
+      <div className="sticky top-0 z-50 bg-white border-b shadow-sm px-6 py-4">
+        <div className="container mx-auto max-w-lg flex items-center justify-between">
+          <div className="flex items-center gap-3">
+             <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center border shadow-inner">
+                <Bike className="h-5 w-5 text-primary" />
+             </div>
+             <div>
+                <h3 className="font-black text-sm text-slate-900 flex items-center gap-1">
+                   {session?.user?.name || "Rider"} <span className="text-yellow-500 flex items-center text-[10px]"><Star className="h-3 w-3 fill-current" /> 4.7</span>
+                </h3>
+                <div className="flex items-center gap-2">
+                   <button 
+                     onClick={() => setIsOnline(!isOnline)}
+                     className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider transition-all ${
+                       isOnline ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                     }`}
+                   >
+                      <div className={`w-1.5 h-1.5 rounded-full ${isOnline ? "bg-green-500 animate-pulse" : "bg-red-500"}`} />
+                      {isOnline ? "Online" : "Offline"}
+                   </button>
+                   <button 
+                     onClick={() => setIsBusy(!isBusy)}
+                     className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider transition-all ${
+                       isBusy ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-slate-100 text-slate-500 border-transparent"
+                     } border`}
+                   >
+                      Busy Mode
+                   </button>
+                </div>
+             </div>
+          </div>
+          <div className="flex items-center gap-3">
+             <button className="relative w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center hover:bg-slate-100 transition-all">
+                <Bell className="h-5 w-5 text-slate-600" />
+                {availableOrders.length > 0 && isOnline && (
+                   <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
+                )}
+             </button>
+             <button onClick={() => setActiveTab("earnings")} className="flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-2xl border border-primary/20 hover:bg-primary/20 transition-all">
+                <Wallet className="h-4 w-4 text-primary" />
+                <span className="font-black text-primary text-sm">${todayEarnings.toFixed(0)}</span>
+             </button>
+          </div>
+        </div>
       </div>
 
-      <div className="relative z-10">
-        {/* Header Section */}
-        <header className="pt-16 pb-8 px-6">
-          <div className="container mx-auto max-w-6xl">
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
-              <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
-                  <TrendingUp className="h-3 w-3" />
-                  Rider Online
+      <div className="container mx-auto max-w-lg p-6 space-y-6">
+        
+        {/* 6. Map Mini View (Optional but powerful) */}
+        {isOnline && activeOrders.length === 0 && (
+          <div className="relative h-32 w-full bg-slate-200 rounded-[2rem] overflow-hidden border shadow-inner">
+             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80&w=1000')] bg-cover opacity-50 contrast-125 saturate-0" />
+             <div className="absolute inset-0 bg-primary/5" />
+             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                <div className="relative">
+                   <div className="absolute -inset-4 bg-primary/20 blur-xl rounded-full animate-ping" />
+                   <div className="relative w-8 h-8 bg-primary rounded-full border-4 border-white shadow-xl flex items-center justify-center">
+                      <Bike className="h-4 w-4 text-white" />
+                   </div>
                 </div>
-                <h1 className="text-5xl font-black tracking-tighter text-white">
-                  Fleet <span className="text-primary italic">Command</span>
-                </h1>
-                <p className="text-slate-400 font-medium text-lg">Fuel your day, deliver the joy.</p>
-              </div>
-
-              <div className="grid grid-cols-2 sm:flex items-center gap-4">
-                <div className="flex flex-col items-end gap-1 px-6 py-4 bg-white/5 border border-white/10 rounded-[2rem] backdrop-blur-xl hover:bg-white/10 transition-colors">
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                    <Wallet className="h-3 w-3" /> Total Earnings
-                  </p>
-                  <p className="text-3xl font-black text-white">${totalEarnings.toFixed(2)}</p>
+             </div>
+             <div className="absolute bottom-3 left-6 flex items-center gap-2">
+                <div className="px-3 py-1 bg-white/90 backdrop-blur rounded-full text-[10px] font-black text-slate-800 shadow-sm flex items-center gap-1.5">
+                   <Target className="h-3 w-3 text-primary" /> Dhaka City Zone
                 </div>
-                <div className="flex flex-col items-end gap-1 px-6 py-4 bg-primary/10 border border-primary/20 rounded-[2rem] backdrop-blur-xl">
-                  <p className="text-[10px] font-black text-primary/70 uppercase tracking-widest flex items-center gap-2">
-                    <Award className="h-3 w-3" /> Level 1 Rider
-                  </p>
-                  <p className="text-3xl font-black text-primary">{completedOrders.length}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Tab Navigation */}
-            <div className="flex flex-wrap gap-3 mt-12 p-2 bg-white/5 border border-white/10 rounded-[2.5rem] backdrop-blur-md w-fit">
-              {[
-                { id: "available", label: "Marketplace", count: availableOrders.length, icon: Package, color: "bg-primary" },
-                { id: "active", label: "Current Missions", count: activeOrders.length, icon: Navigation, color: "bg-blue-500" },
-                { id: "completed", label: "Archive", count: completedOrders.length, icon: CheckCircle2, color: "bg-green-500" }
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex items-center gap-3 px-8 py-4 rounded-[2rem] font-black text-sm transition-all duration-300 ${
-                    activeTab === tab.id 
-                    ? "bg-white text-black shadow-[0_10px_40px_-10px_rgba(255,255,255,0.3)] scale-105" 
-                    : "text-slate-400 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  <tab.icon className={`h-4 w-4 ${activeTab === tab.id ? "text-primary" : "text-slate-500"}`} />
-                  {tab.label}
-                  {tab.count > 0 && (
-                    <span className={`flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-full text-[10px] font-black ${
-                      activeTab === tab.id ? "bg-black text-white" : "bg-white/10 text-slate-400"
-                    }`}>
-                      {tab.count}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
+             </div>
           </div>
-        </header>
+        )}
 
-        {/* Content Section */}
-        <main className="container mx-auto max-w-6xl px-6 pb-24">
-          {activeTab === "available" && (
-            <div className="grid gap-8">
-              {availableOrders.length === 0 ? (
-                <div className="bg-white/5 border border-white/10 border-dashed rounded-[3rem] p-32 text-center space-y-6 backdrop-blur-sm">
-                   <div className="relative w-24 h-24 mx-auto">
-                      <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full animate-pulse" />
-                      <Clock className="relative h-24 w-24 text-primary/40 mx-auto" />
-                   </div>
-                   <div className="space-y-2">
-                     <h3 className="text-3xl font-black text-white">Radio Silence</h3>
-                     <p className="text-slate-400 max-w-md mx-auto font-medium">New missions will appear here as soon as they are beamed up from restaurants.</p>
-                   </div>
+        {/* 2. Main Screen = Order Feed (Core Section) */}
+        {!isOnline ? (
+          <div className="bg-white border rounded-[3rem] p-12 text-center space-y-4 shadow-xl shadow-slate-200/50 animate-in fade-in zoom-in-95 duration-500">
+             <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
+                <Power className="h-10 w-10 text-red-500" />
+             </div>
+             <h2 className="text-2xl font-black text-slate-900">You're Offline</h2>
+             <p className="text-slate-500 font-medium">Go Online to receive new order requests in your area.</p>
+             <button 
+               onClick={() => setIsOnline(true)}
+               className="w-full py-5 bg-primary text-primary-foreground rounded-[2rem] font-black text-lg shadow-xl shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
+             >
+                Go Online
+             </button>
+          </div>
+        ) : activeOrders.length > 0 ? (
+          /* 3. Active Delivery Section */
+          <div className="space-y-6">
+             {activeOrders.map(order => (
+               <div key={order.id} className="bg-white border-2 border-primary/20 rounded-[3rem] overflow-hidden shadow-2xl shadow-primary/5 animate-in slide-in-from-right duration-500">
+                  <div className="bg-primary p-8 text-white">
+                     <div className="flex justify-between items-center mb-6">
+                        <div className="flex items-center gap-3">
+                           <div className="px-3 py-1 bg-white/20 rounded-full text-[10px] font-black uppercase tracking-widest">
+                              Mission Active
+                           </div>
+                           <span className="font-black text-white/70">#{order.id.slice(-6).toUpperCase()}</span>
+                        </div>
+                        <div className="font-black text-2xl">${(Number(order.deliveryCharge ?? order.store?.deliveryCharge) || 0).toFixed(2)}</div>
+                     </div>
+
+                     {/* Step Tracker */}
+                     <div className="flex items-center justify-between px-2 mb-2">
+                        {[
+                          { status: "ACCEPTED", icon: StoreIcon },
+                          { status: "PREPARING", icon: Clock },
+                          { status: "OUT_FOR_DELIVERY", icon: Bike },
+                          { status: "DELIVERED", icon: CheckCircle2 }
+                        ].map((step, idx, arr) => {
+                          const steps = ["ACCEPTED", "PREPARING", "OUT_FOR_DELIVERY", "DELIVERED"];
+                          const currentIdx = steps.indexOf(order.status);
+                          const isActive = currentIdx >= idx;
+                          return (
+                            <div key={step.status} className="flex items-center flex-1 last:flex-none">
+                               <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                                 isActive ? "bg-white text-primary" : "bg-white/20 text-white/50"
+                               }`}>
+                                  {isActive ? <CheckCircle2 className="h-4 w-4" /> : <div className="w-1.5 h-1.5 rounded-full bg-current" />}
+                               </div>
+                               {idx < arr.length - 1 && (
+                                 <div className={`h-1 flex-1 mx-2 rounded-full ${currentIdx > idx ? "bg-white" : "bg-white/20"}`} />
+                               )}
+                            </div>
+                          );
+                        })}
+                     </div>
+                     <div className="flex justify-between px-2 text-[8px] font-black uppercase tracking-widest text-white/60">
+                        <span>Confirm</span>
+                        <span>Prepare</span>
+                        <span>Pickup</span>
+                        <span>Deliver</span>
+                     </div>
+                  </div>
+
+                  <div className="p-8 space-y-8">
+                     <div className="space-y-6">
+                        <div className="flex items-start gap-4">
+                           <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
+                              <Package className="h-5 w-5" />
+                           </div>
+                           <div className="flex-1">
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pickup From</p>
+                              <h4 className="font-black text-lg leading-tight">{order.store?.name}</h4>
+                              <div className="flex gap-2 mt-3">
+                                 <button className="flex-1 py-3 bg-slate-100 text-slate-900 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+                                    <Phone className="h-3 w-3" /> Call Shop
+                                 </button>
+                                 <button className="flex-1 py-3 bg-slate-100 text-slate-900 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+                                    <Navigation className="h-3 w-3" /> Navigate
+                                 </button>
+                              </div>
+                           </div>
+                        </div>
+
+                        <div className="flex items-start gap-4">
+                           <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
+                              <MapPin className="h-5 w-5" />
+                           </div>
+                           <div className="flex-1">
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Deliver To</p>
+                              <h4 className="font-black text-lg leading-tight">{order.customer?.name}</h4>
+                              <p className="text-xs font-medium text-slate-500 mt-1">{order.deliveryAddress}</p>
+                              <div className="flex gap-2 mt-3">
+                                 <button className="flex-1 py-3 bg-slate-100 text-slate-900 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+                                    <Phone className="h-3 w-3" /> Call Customer
+                                 </button>
+                                 <button className="flex-1 py-3 bg-slate-100 text-slate-900 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+                                    <Navigation className="h-3 w-3" /> Navigate
+                                 </button>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+
+                     <div className="pt-8 border-t border-dashed">
+                        {order.status === "ACCEPTED" && (
+                           <button 
+                             onClick={() => handleUpdateStatus(order.id, "PREPARING")}
+                             className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-[1.02] transition-all"
+                           >
+                             Confirming Arrival
+                           </button>
+                        )}
+                        {order.status === "PREPARING" && (
+                           <button 
+                             onClick={() => handleUpdateStatus(order.id, "OUT_FOR_DELIVERY")}
+                             className="w-full py-5 bg-primary text-primary-foreground rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-[1.02] transition-all shadow-xl shadow-primary/20"
+                           >
+                             Mark as Picked Up
+                           </button>
+                        )}
+                        {order.status === "OUT_FOR_DELIVERY" && (
+                           <button 
+                             onClick={() => handleUpdateStatus(order.id, "DELIVERED")}
+                             className="w-full py-5 bg-green-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-[1.02] transition-all shadow-xl shadow-green-500/20"
+                           >
+                             Confirm Delivery
+                           </button>
+                        )}
+                        {order.status === "ACCEPTED" && (
+                           <button 
+                             onClick={() => handleCancelAssignment(order.id)}
+                             className="w-full mt-4 py-3 text-red-500 font-black text-[10px] uppercase tracking-widest"
+                           >
+                             Release Order
+                           </button>
+                        )}
+                     </div>
+                  </div>
+               </div>
+             ))}
+          </div>
+        ) : (
+          /* Incoming Order Feed */
+          <div className="space-y-6">
+             <div className="flex items-center justify-between px-2">
+                <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Live Order Feed</h2>
+                <div className="flex items-center gap-1">
+                   <div className="w-1 h-1 bg-primary rounded-full animate-ping" />
+                   <span className="text-[9px] font-black text-primary uppercase">Searching...</span>
                 </div>
-              ) : (
-                <div className="grid lg:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  {availableOrders.map(order => (
-                    <div key={order.id} className="group relative bg-white/5 border border-white/10 rounded-[3rem] p-10 hover:bg-white/10 hover:border-white/20 hover:shadow-[0_20px_80px_-20px_rgba(0,0,0,0.5)] transition-all duration-500 overflow-hidden">
-                       <div className="absolute top-0 right-0 p-8">
-                          <div className="bg-primary/20 text-primary px-4 py-2 rounded-2xl font-black text-xs uppercase tracking-widest border border-primary/20 group-hover:scale-110 transition-transform">
-                             ${(Number(order.deliveryCharge ?? order.store?.deliveryCharge) || 0).toFixed(2)}
-                          </div>
-                       </div>
+             </div>
 
-                       <div className="space-y-8">
-                          <div className="flex items-center gap-5">
-                             <div className="w-16 h-16 bg-white/10 rounded-[1.5rem] flex items-center justify-center group-hover:rotate-6 transition-transform">
-                                <Truck className="h-8 w-8 text-primary" />
-                             </div>
-                             <div>
-                                <h4 className="text-2xl font-black text-white tracking-tight">{order.store?.name}</h4>
-                                <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-widest">
-                                   <Package className="h-3 w-3" />
-                                   {order.items?.length || 0} Items • #{order.id.slice(-6).toUpperCase()}
-                                </div>
-                             </div>
-                          </div>
+             {availableOrders.length === 0 ? (
+               <div className="bg-white border border-dashed rounded-[3rem] p-16 text-center space-y-4">
+                  <div className="relative w-16 h-16 mx-auto">
+                     <div className="absolute inset-0 bg-primary/10 rounded-full animate-ping" />
+                     <Clock className="relative h-16 w-16 text-primary/20 mx-auto" />
+                  </div>
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight">Looking for orders...</h3>
+                  <p className="text-slate-500 text-sm font-medium">Keep the app open and stay in the zone to receive the next job offer.</p>
+               </div>
+             ) : (
+               <div className="space-y-4">
+                  {availableOrders.map(order => {
+                    const timer = timers[order.id] || 0;
+                    if (timer <= 0) return null;
 
-                          <div className="space-y-6">
-                             <div className="flex items-start gap-4 p-6 bg-black/40 rounded-[2rem] border border-white/5">
-                                <MapPin className="h-6 w-6 text-primary mt-1" />
-                                <div className="space-y-1">
-                                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Target Location</p>
-                                   <p className="font-bold text-white leading-relaxed">{order.deliveryAddress}</p>
-                                   <p className="text-[10px] text-primary font-black flex items-center gap-1.5 uppercase tracking-wider mt-2">
-                                      <Navigation className="h-3 w-3" />
-                                      {distances[order.id] || "Calculating..."} away
-                                   </p>
-                                </div>
-                             </div>
+                    return (
+                      <div key={order.id} className="relative bg-white border border-slate-200 rounded-[2.5rem] p-6 shadow-lg shadow-slate-200/50 hover:border-primary/30 transition-all animate-in slide-in-from-right duration-500">
+                         {/* Expiry Timer Bar */}
+                         <div className="absolute top-0 left-8 right-8 h-1 bg-slate-100 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full transition-all duration-1000 ${timer < 5 ? "bg-red-500" : "bg-primary"}`}
+                              style={{ width: `${(timer / 15) * 100}%` }}
+                            />
+                         </div>
 
-                             <div className="grid grid-cols-2 gap-4">
-                                <div className="p-5 bg-white/5 rounded-[1.5rem] border border-white/5">
-                                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Items</p>
-                                   <p className="font-black text-white text-lg">
-                                      {order.items?.slice(0, 1).map((i: any) => i.product?.name)}
-                                      {order.items?.length > 1 && <span className="text-slate-500 text-sm"> +{order.items.length - 1} more</span>}
-                                   </p>
-                                </div>
-                                <div className="p-5 bg-white/5 rounded-[1.5rem] border border-white/5">
-                                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Bill</p>
-                                   <p className="font-black text-white text-lg">${(Number(order.totalPrice) || 0).toFixed(2)}</p>
-                                </div>
-                             </div>
-                          </div>
+                         <div className="flex justify-between items-start pt-2">
+                            <div className="flex items-center gap-3">
+                               <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center border">
+                                  <Truck className="h-6 w-6 text-slate-400" />
+                               </div>
+                               <div>
+                                  <h4 className="font-black text-lg leading-tight text-slate-900">{order.store?.name}</h4>
+                                  <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                     {order.items?.length || 0} Items • <span className="text-primary">{timer}s left</span>
+                                  </div>
+                               </div>
+                            </div>
+                            <div className="text-right">
+                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Earn</p>
+                               <p className="text-2xl font-black text-green-600">${(Number(order.deliveryCharge ?? order.store?.deliveryCharge) || 0).toFixed(2)}</p>
+                            </div>
+                         </div>
 
-                          <div className="flex items-center gap-3 pt-4">
-                             <button 
-                               onClick={() => handleAcceptOrder(order.id)}
-                               className="flex-1 py-5 bg-white text-black rounded-[1.5rem] font-black text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_15px_40px_-10px_rgba(255,255,255,0.4)]"
-                             >
-                                Initiate Mission
-                             </button>
-                             <button className="w-16 h-16 bg-white/5 text-slate-400 rounded-[1.5rem] flex items-center justify-center hover:bg-white/10 hover:text-white transition-all group/btn">
-                                <ArrowRight className="h-6 w-6 group-hover:translate-x-1 transition-transform" />
-                             </button>
-                          </div>
-                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+                         <div className="grid grid-cols-3 gap-3 my-6">
+                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                               <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Pickup</p>
+                               <p className="font-black text-xs text-slate-900">{distances[order.id]?.pickup || "1.2 km"}</p>
+                            </div>
+                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                               <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Drop</p>
+                               <p className="font-black text-xs text-slate-900">{distances[order.id]?.drop || "3.5 km"}</p>
+                            </div>
+                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                               <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Est. Time</p>
+                               <p className="font-black text-xs text-slate-900">{distances[order.id]?.time || "25 min"}</p>
+                            </div>
+                         </div>
 
-          {activeTab === "active" && (
-            <div className="space-y-8">
-              {activeOrders.length === 0 ? (
-                <div className="bg-white/5 border border-white/10 border-dashed rounded-[3rem] p-32 text-center space-y-6 backdrop-blur-sm">
-                   <Navigation className="h-24 w-24 text-slate-700 mx-auto" />
-                   <div className="space-y-2">
-                     <h3 className="text-3xl font-black text-white">No Active Missions</h3>
-                     <p className="text-slate-400 max-w-md mx-auto font-medium">Your tactical display is clear. Head to the Marketplace to pick up a new contract.</p>
-                   </div>
-                </div>
-              ) : (
-                <div className="grid gap-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                  {activeOrders.map(order => (
-                    <div key={order.id} className="group relative bg-[#1e293b] border border-primary/30 rounded-[4rem] overflow-hidden shadow-2xl shadow-primary/5">
-                       <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
-                       
-                       <div className="p-12 space-y-12">
-                          <div className="flex flex-col lg:flex-row justify-between gap-8 lg:items-center">
-                             <div className="flex items-center gap-6">
-                                <div className="w-20 h-20 bg-primary/20 rounded-[2rem] flex items-center justify-center border border-primary/20 shadow-[0_0_40px_rgba(249,115,22,0.1)]">
-                                   <Bike className="h-10 w-10 text-primary animate-pulse" />
-                                </div>
-                                <div className="space-y-1">
-                                   <div className="flex items-center gap-3">
-                                      <span className="px-4 py-1.5 bg-primary text-black rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-primary/20">
-                                         {order.status.replace(/_/g, ' ')}
-                                      </span>
-                                      <span className="font-black text-slate-500 tracking-wider">#{order.id.slice(-6).toUpperCase()}</span>
-                                   </div>
-                                   <h4 className="text-3xl font-black text-white">{order.store?.name}</h4>
-                                </div>
-                             </div>
+                         <div className="flex items-center gap-3">
+                            <button 
+                              onClick={() => handleAcceptOrder(order.id)}
+                              className="flex-[2] py-4 bg-primary text-primary-foreground rounded-2xl font-black text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/20"
+                            >
+                               Accept
+                            </button>
+                            <button className="flex-1 py-4 bg-slate-100 text-slate-400 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-200 hover:text-slate-600 transition-all">
+                               Decline
+                            </button>
+                         </div>
+                      </div>
+                    );
+                  })}
+               </div>
+             )}
+          </div>
+        )}
 
-                             <div className="flex items-center gap-6">
-                                <div className="text-right">
-                                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Contract Value</p>
-                                   <p className="text-4xl font-black text-white">${(Number(order.deliveryCharge ?? order.store?.deliveryCharge) || 0).toFixed(2)}</p>
-                                </div>
-                                {order.status === "ACCEPTED" && (
-                                  <button 
-                                    onClick={() => handleCancelAssignment(order.id)}
-                                    className="px-8 py-4 bg-red-500/10 text-red-500 border border-red-500/20 rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-lg shadow-red-500/5"
-                                  >
-                                    Release
-                                  </button>
-                                )}
-                             </div>
-                          </div>
+        {/* 4. Earnings Snapshot (Mini Dashboard) */}
+        <div className="bg-slate-900 text-white rounded-[3rem] p-10 space-y-8 shadow-2xl shadow-slate-900/30 overflow-hidden relative">
+           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[60px] rounded-full -mr-16 -mt-16" />
+           <div className="flex justify-between items-start relative z-10">
+              <div>
+                 <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-2">Today's Earnings</p>
+                 <h3 className="text-5xl font-black text-white tracking-tighter">${todayEarnings.toFixed(2)}</h3>
+              </div>
+              <div className="bg-white/10 p-3 rounded-2xl">
+                 <Wallet className="h-6 w-6 text-primary" />
+              </div>
+           </div>
 
-                          <div className="grid md:grid-cols-2 gap-8">
-                             <div className="group/loc relative p-8 bg-slate-900/50 rounded-[2.5rem] border border-white/5 hover:border-primary/20 transition-all">
-                                <div className="absolute top-8 right-8 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                                   <Package className="h-6 w-6 text-primary" />
-                                </div>
-                                <div className="space-y-4">
-                                   <h5 className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Pickup Point</h5>
-                                   <div className="space-y-2">
-                                      <p className="text-2xl font-black text-white">{order.store?.name}</p>
-                                      <p className="text-slate-400 font-medium leading-relaxed">{order.store?.address || "Ready for pickup at restaurant"}</p>
-                                   </div>
-                                </div>
-                             </div>
+           <div className="grid grid-cols-2 gap-6 relative z-10">
+              <div className="space-y-1">
+                 <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">This Week</p>
+                 <p className="text-xl font-black text-white/90">${weekEarnings.toFixed(2)}</p>
+              </div>
+              <div className="space-y-1 text-right">
+                 <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Completed</p>
+                 <p className="text-xl font-black text-white/90">{completedOrders.length}</p>
+              </div>
+              <div className="space-y-1">
+                 <p className="text-[9px] font-black text-white/30 uppercase tracking-widest">Pending Payout</p>
+                 <p className="text-xl font-black text-primary">$50.00</p>
+              </div>
+              <div className="flex items-end justify-end">
+                 <button className="px-4 py-2 bg-primary text-primary-foreground rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-all">
+                    Withdraw
+                 </button>
+              </div>
+           </div>
+        </div>
 
-                             <div className="group/loc relative p-8 bg-slate-900/50 rounded-[2.5rem] border border-white/5 hover:border-primary/20 transition-all">
-                                <div className="absolute top-8 right-8 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                                   <MapPin className="h-6 w-6 text-primary" />
-                                </div>
-                                <div className="space-y-4">
-                                   <h5 className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Drop Zone</h5>
-                                   <div className="space-y-2">
-                                      <p className="text-2xl font-black text-white">{order.customer?.name}</p>
-                                      <p className="text-slate-400 font-medium leading-relaxed">{order.deliveryAddress}</p>
-                                   </div>
-                                </div>
-                             </div>
-                          </div>
+        {/* 8. Performance Highlights */}
+        <div className="grid grid-cols-2 gap-4">
+           <div className="bg-white border rounded-[2rem] p-6 space-y-4">
+              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500">
+                 <Zap className="h-5 w-5" />
+              </div>
+              <div>
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">On-Time %</p>
+                 <p className="text-2xl font-black text-slate-900">98.2%</p>
+              </div>
+           </div>
+           <div className="bg-white border rounded-[2rem] p-6 space-y-4">
+              <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-500">
+                 <ShieldCheck className="h-5 w-5" />
+              </div>
+              <div>
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Safety Score</p>
+                 <p className="text-2xl font-black text-slate-900">4.9</p>
+              </div>
+           </div>
+        </div>
 
-                          <div className="space-y-8">
-                             <div className="flex items-center gap-4">
-                                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-                                <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Operational Phase</h5>
-                                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-                             </div>
-                             
-                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                {[
-                                  { status: "ACCEPTED", label: "Confirmed", icon: CheckCircle2 },
-                                  { status: "PREPARING", label: "In Kitchen", icon: Clock },
-                                  { status: "OUT_FOR_DELIVERY", label: "On Road", icon: Bike },
-                                  { status: "DELIVERED", label: "Complete", icon: Award }
-                                ].map((step) => {
-                                  const isActive = order.status === step.status;
-                                  return (
-                                    <button
-                                      key={step.status}
-                                      onClick={() => handleUpdateStatus(order.id, step.status)}
-                                      disabled={isActive}
-                                      className={`group/step relative flex flex-col items-center gap-4 p-8 rounded-[2.5rem] border-2 transition-all duration-500 ${
-                                        isActive 
-                                        ? "bg-white border-white text-black shadow-[0_20px_50px_-10px_rgba(255,255,255,0.4)] scale-105 z-10" 
-                                        : "bg-slate-900/40 border-white/5 text-slate-500 hover:border-white/20 hover:bg-slate-800"
-                                      }`}
-                                    >
-                                       <div className={`p-4 rounded-2xl transition-colors ${isActive ? "bg-black/5" : "bg-white/5 group-hover/step:bg-white/10"}`}>
-                                          <step.icon className={`h-8 w-8 ${isActive ? "text-primary" : "text-slate-600"}`} />
-                                       </div>
-                                       <span className="text-[10px] font-black uppercase tracking-widest">{step.label}</span>
-                                    </button>
-                                  );
-                                })}
-                             </div>
-                          </div>
-                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+      </div>
 
-          {activeTab === "completed" && (
-            <div className="animate-in fade-in duration-500">
-               {completedOrders.length === 0 ? (
-                 <div className="bg-white/5 border border-white/10 border-dashed rounded-[3rem] p-32 text-center space-y-6 backdrop-blur-sm">
-                    <Award className="h-24 w-24 text-slate-800 mx-auto" />
-                    <h3 className="text-3xl font-black text-white">Honor Roll Empty</h3>
-                    <p className="text-slate-400 max-w-md mx-auto font-medium">Your historical records are waiting for their first entry. Start delivering to build your legacy.</p>
-                 </div>
-               ) : (
-                 <div className="bg-white/5 border border-white/10 rounded-[3rem] overflow-hidden backdrop-blur-md">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left">
-                         <thead>
-                            <tr className="bg-white/5 border-b border-white/10">
-                               <th className="px-10 py-8 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Mission ID</th>
-                               <th className="px-10 py-8 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Origin</th>
-                               <th className="px-10 py-8 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Revenue</th>
-                               <th className="px-10 py-8 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Timestamp</th>
-                            </tr>
-                         </thead>
-                         <tbody className="divide-y divide-white/5">
-                            {completedOrders.map(order => (
-                              <tr key={order.id} className="hover:bg-white/10 transition-all group">
-                                 <td className="px-10 py-8 font-black text-white tracking-widest text-sm uppercase">#{order.id.slice(-6)}</td>
-                                 <td className="px-10 py-8">
-                                    <div className="flex items-center gap-3">
-                                       <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                                          <Package className="h-4 w-4 text-primary" />
-                                       </div>
-                                       <span className="font-bold text-slate-300">{order.store?.name}</span>
-                                    </div>
-                                 </td>
-                                 <td className="px-10 py-8 font-black text-primary text-lg">${(Number(order.deliveryCharge ?? order.store?.deliveryCharge) || 0).toFixed(2)}</td>
-                                 <td className="px-10 py-8 text-slate-500 text-sm font-black uppercase tracking-wider">{new Date(order.createdAt).toLocaleDateString()}</td>
-                              </tr>
-                            ))}
-                         </tbody>
-                      </table>
-                    </div>
-                 </div>
-               )}
-            </div>
-          )}
-        </main>
+      {/* Bottom Nav Mock */}
+      <div className="fixed bottom-0 inset-x-0 bg-white border-t px-8 py-4 z-50">
+         <div className="container mx-auto max-w-lg flex items-center justify-between">
+            <button className="flex flex-col items-center gap-1 text-primary">
+               <Bike className="h-6 w-6" />
+               <span className="text-[8px] font-black uppercase tracking-widest">Home</span>
+            </button>
+            <button className="flex flex-col items-center gap-1 text-slate-400">
+               <TrendingUp className="h-6 w-6" />
+               <span className="text-[8px] font-black uppercase tracking-widest">Growth</span>
+            </button>
+            <button className="flex flex-col items-center gap-1 text-slate-400">
+               <Award className="h-6 w-6" />
+               <span className="text-[8px] font-black uppercase tracking-widest">Badge</span>
+            </button>
+            <button className="flex flex-col items-center gap-1 text-slate-400">
+               <MoreVertical className="h-6 w-6" />
+               <span className="text-[8px] font-black uppercase tracking-widest">More</span>
+            </button>
+         </div>
       </div>
     </div>
+  );
+}
+
+// Internal Helper
+function StoreIcon(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7" />
+      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+      <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4" />
+      <path d="M2 7h20" />
+      <path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7" />
+    </svg>
   );
 }
