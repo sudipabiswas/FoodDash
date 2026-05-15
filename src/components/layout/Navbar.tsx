@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, User, Search, Menu, LogOut, LayoutDashboard } from "lucide-react";
+import { ShoppingCart, User, Search, Menu, LogOut, LayoutDashboard, Bike } from "lucide-react";
 import { useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { useSession, signOut } from "next-auth/react";
@@ -56,6 +56,12 @@ export default function Navbar() {
               {(session?.user as any)?.role === "CUSTOMER" && (
                 <Link href="/orders" className="transition-colors hover:text-primary">
                   My Orders
+                </Link>
+              )}
+              {(session?.user as any)?.role === "DELIVERY_MAN" && (
+                <Link href="/rider-dashboard" className="transition-colors hover:text-primary flex items-center gap-1">
+                  <Bike className="h-4 w-4" />
+                  Rider Dashboard
                 </Link>
               )}
               <Link href="/offers" className="transition-colors hover:text-primary">
@@ -124,6 +130,14 @@ export default function Navbar() {
                   >
                     <LayoutDashboard className="h-4 w-4" />
                     <span>Dashboard</span>
+                  </Link>
+                ) : (session?.user as any)?.role === "DELIVERY_MAN" ? (
+                  <Link 
+                    href="/rider-dashboard" 
+                    className="hidden sm:flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-full text-sm font-bold transition-all"
+                  >
+                    <Bike className="h-4 w-4" />
+                    <span>Rider View</span>
                   </Link>
                 ) : null}
                 
@@ -222,6 +236,11 @@ export default function Navbar() {
                   <Link href="/store-dashboard" className="flex items-center gap-2 text-sm font-medium p-2 hover:bg-muted rounded-md transition-colors">
                     <LayoutDashboard className="h-4 w-4" />
                     Store Dashboard
+                  </Link>
+                ) : (session?.user as any)?.role === "DELIVERY_MAN" ? (
+                  <Link href="/rider-dashboard" className="flex items-center gap-2 text-sm font-medium p-2 hover:bg-muted rounded-md transition-colors">
+                    <Bike className="h-4 w-4" />
+                    Rider Dashboard
                   </Link>
                 ) : null}
                 <Link href="/profile" className="flex items-center gap-2 text-sm font-medium p-2 hover:bg-muted rounded-md transition-colors">

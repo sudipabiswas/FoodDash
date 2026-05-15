@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Mail, Lock, User, ShieldCheck } from "lucide-react";
+import { ArrowRight, Mail, Lock, User, ShieldCheck, Bike } from "lucide-react";
 import { signIn } from "next-auth/react";
 
 export default function RegisterPage() {
@@ -101,11 +101,11 @@ export default function RegisterPage() {
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block px-1">
                 Account Type
               </label>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 <button
                   type="button"
                   onClick={() => setRole("CUSTOMER")}
-                  className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                  className={`py-3 px-2 rounded-xl border text-[10px] sm:text-xs font-bold transition-all flex flex-col items-center justify-center gap-1.5 ${
                     role === "CUSTOMER" 
                     ? "bg-primary/10 border-primary text-primary ring-1 ring-primary" 
                     : "bg-background border-border text-muted-foreground hover:bg-muted"
@@ -116,15 +116,27 @@ export default function RegisterPage() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setRole("DELIVERY_MAN")}
+                  className={`py-3 px-2 rounded-xl border text-[10px] sm:text-xs font-bold transition-all flex flex-col items-center justify-center gap-1.5 ${
+                    role === "DELIVERY_MAN" 
+                    ? "bg-primary/10 border-primary text-primary ring-1 ring-primary" 
+                    : "bg-background border-border text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Bike className="h-4 w-4" />
+                  Rider
+                </button>
+                <button
+                  type="button"
                   onClick={() => setRole("STORE_OWNER")}
-                  className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                  className={`py-3 px-2 rounded-xl border text-[10px] sm:text-xs font-bold transition-all flex flex-col items-center justify-center gap-1.5 ${
                     role === "STORE_OWNER" 
                     ? "bg-primary/10 border-primary text-primary ring-1 ring-primary" 
                     : "bg-background border-border text-muted-foreground hover:bg-muted"
                   }`}
                 >
                   <ShieldCheck className="h-4 w-4" />
-                  Store Owner
+                  Owner
                 </button>
               </div>
             </div>
