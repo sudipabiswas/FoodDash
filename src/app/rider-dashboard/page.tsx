@@ -20,12 +20,27 @@ export default function RiderDashboard() {
   const [myTasks, setMyTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("available"); // available, active, completed
+  const [isMounted, setIsMounted] = useState(false);
+  const [distances, setDistances] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    setIsMounted(true);
     fetchOrders();
     const interval = setInterval(fetchOrders, 30000); // Refresh every 30s
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (availableOrders.length > 0) {
+      const newDistances = { ...distances };
+      availableOrders.forEach(order => {
+        if (!newDistances[order.id]) {
+          newDistances[order.id] = `${(Math.random() * 5 + 1).toFixed(1)} km away`;
+        }
+      });
+      setDistances(newDistances);
+    }
+  }, [availableOrders]);
 
   const fetchOrders = async () => {
     try {
@@ -108,7 +123,7 @@ export default function RiderDashboard() {
   const completedOrders = myTasks.filter(o => o.status === "DELIVERED");
   const totalEarnings = completedOrders.reduce((sum, o) => sum + (o.deliveryCharge || 0), 0);
 
-  if (loading) {
+  if (!isMounted || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -209,7 +224,7 @@ export default function RiderDashboard() {
                                     <p className="font-bold text-sm">{order.deliveryAddress}</p>
                                     <p className="text-[10px] text-primary font-bold mt-0.5 flex items-center gap-1">
                                        <Navigation className="h-3 w-3" />
-                                       {Math.floor(Math.random() * 5 + 1)}.{Math.floor(Math.random() * 9)} km away
+                                       {distances[order.id] || "Calculating distance..."}
                                     </p>
                                  </div>
                               </div>
@@ -217,9 +232,9 @@ export default function RiderDashboard() {
                               <div className="bg-muted/50 p-4 rounded-2xl border border-dashed">
                                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Order Items</p>
                                  <div className="space-y-1.5">
-                                    {order.items.map((item: any) => (
+                                    {order.items?.map((item: any) => (
                                        <div key={item.id} className="flex justify-between text-xs font-medium">
-                                          <span>{item.quantity}x {item.product.name}</span>
+                                          <span>{item.quantity}x {item.product?.name}</span>
                                        </div>
                                     ))}
                                  </div>
