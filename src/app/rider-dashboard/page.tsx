@@ -123,6 +123,27 @@ export default function RiderDashboard() {
     }
   };
 
+  const handleCancelAssignment = async (orderId: string) => {
+    if (!confirm("Release this mission? It will be available for other riders.")) return;
+
+    try {
+      const res = await fetch("/api/rider/orders/cancel-assignment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId }),
+      });
+
+      if (res.ok) {
+        toast.success("Mission released");
+        fetchOrders();
+      } else {
+        toast.error("Failed to release");
+      }
+    } catch (err) {
+      toast.error("Action failed");
+    }
+  };
+
   const handleUpdateStatus = async (orderId: string, status: string) => {
     try {
       const res = await fetch("/api/rider/orders/status", {
