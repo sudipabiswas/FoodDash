@@ -52,13 +52,13 @@ export default function Navbar() {
             <div className="hidden md:flex items-center space-x-6 text-sm font-medium">
               {(session?.user as any)?.role === "DELIVERY_MAN" ? (
                 <>
-                  <Link href="/rider-dashboard" className="transition-colors hover:text-primary flex items-center gap-1">
+                  <Link href="/rider-dashboard?tab=home" className="transition-colors hover:text-primary flex items-center gap-1">
                     Dashboard
                   </Link>
                   <Link href="/rider-dashboard?tab=growth" className="transition-colors hover:text-primary">
                     Earnings
                   </Link>
-                  <Link href="/rider-dashboard?tab=badge" className="transition-colors hover:text-primary">
+                  <Link href="/rider-dashboard?tab=dutyrecord" className="transition-colors hover:text-primary">
                     Duty Record
                   </Link>
                   <Link href="/about" className="transition-colors hover:text-primary">
@@ -189,9 +189,9 @@ export default function Navbar() {
         <div className="md:hidden border-t bg-background px-4 py-4 space-y-4">
           {(session?.user as any)?.role === "DELIVERY_MAN" ? (
             <>
-              <Link href="/rider-dashboard" className="block text-sm font-medium" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
+              <Link href="/rider-dashboard?tab=home" className="block text-sm font-medium" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
               <Link href="/rider-dashboard?tab=growth" className="block text-sm font-medium" onClick={() => setIsMenuOpen(false)}>Earnings</Link>
-              <Link href="/rider-dashboard?tab=badge" className="block text-sm font-medium" onClick={() => setIsMenuOpen(false)}>Duty Record</Link>
+              <Link href="/rider-dashboard?tab=dutyrecord" className="block text-sm font-medium" onClick={() => setIsMenuOpen(false)}>Duty Record</Link>
               <Link href="/about" className="block text-sm font-medium" onClick={() => setIsMenuOpen(false)}>About</Link>
             </>
           ) : (
