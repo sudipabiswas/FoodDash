@@ -37,6 +37,9 @@ export async function PATCH(req: Request) {
     if (data.deliveryZone !== undefined) updateData.deliveryZone = data.deliveryZone;
     if (data.image !== undefined) updateData.image = data.image;
     if (data.mainCategories !== undefined) updateData.mainCategories = data.mainCategories;
+    if (data.address !== undefined) updateData.address = data.address;
+    if (data.latitude !== undefined && data.latitude !== null) updateData.latitude = parseFloat(data.latitude);
+    if (data.longitude !== undefined && data.longitude !== null) updateData.longitude = parseFloat(data.longitude);
     if (data.deliveryCharge !== undefined && data.deliveryCharge !== "") {
       const charge = parseFloat(data.deliveryCharge);
       if (!isNaN(charge)) {

@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Save, Store, Truck, Info, CheckCircle2, ImagePlus, Loader2, X } from "lucide-react";
+import { Save, Store, Truck, Info, CheckCircle2, ImagePlus, Loader2, MapPin } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const MapLocationPicker = dynamic(() => import("@/components/map/MapLocationPicker"), { ssr: false });
 
 export default function StoreSettingsPage() {
   const [loading, setLoading] = useState(true);
@@ -16,8 +19,14 @@ export default function StoreSettingsPage() {
     deliveryZone: "",
     deliveryCharge: 0,
     image: "",
+    address: "",
+    latitude: undefined as number | undefined,
+    longitude: undefined as number | undefined,
     mainCategories: [] as string[],
   });
+
+  // Track whether we have a confirmed pin (separate from the form store state)
+  const [hasPinnedLocation, setHasPinnedLocation] = useState(false);
 
   useEffect(() => {
     fetchStore();
@@ -29,6 +38,9 @@ export default function StoreSettingsPage() {
       const data = await res.json();
       if (res.ok) {
         setStore(data);
+        if (data.latitude && data.longitude) {
+          setHasPinnedLocation(true);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -177,6 +189,17 @@ export default function StoreSettingsPage() {
                   onChange={(e) => setStore({ ...store, name: e.target.value })}
                 />
               </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-muted-foreground">Shop Address</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 rounded-xl border bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  value={store.address || ""}
+                  onChange={(e) => setStore({ ...store, address: e.target.value })}
+                  placeholder="e.g. 123 Main St, New York, NY 10030"
+                />
+              </div>
               
               <div className="space-y-4">
                 <label className="text-sm font-semibold text-muted-foreground">Restaurant Categories (Select all that apply)</label>
@@ -274,6 +297,53 @@ export default function StoreSettingsPage() {
                  </p>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Shop Location Card */}
+        <div className="bg-card border rounded-3xl p-8 space-y-6">
+          <div className="flex items-center gap-2 mb-2">
+            <MapPin className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-bold">Shop Location</h2>
+          </div>
+          <p className="text-sm text-muted-foreground -mt-2">
+            Pin your restaurant on the map so riders can navigate directly to you for order pickups.
+          </p>
+
+          {/* Coordinates display */}
+          {hasPinnedLocation && store.latitude && store.longitude ? (
+            <div className="flex items-center gap-3 px-4 py-3 bg-green-50 border border-green-200 rounded-2xl">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <p className="text-sm font-semibold text-green-700">
+                Location pinned: {store.latitude.toFixed(5)}, {store.longitude.toFixed(5)}
+              </p>
+              <button
+                type="button"
+                onClick={() => { setStore({ ...store, latitude: undefined, longitude: undefined }); setHasPinnedLocation(false); }}
+                className="ml-auto text-xs text-red-500 font-bold hover:underline"
+              >
+                Clear
+              </button>
+            </div>
+          ) : (
+            <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-3">
+              <Info className="h-4 w-4 text-amber-500 flex-shrink-0" />
+              <p className="text-xs text-amber-700 font-medium">No location pinned yet. Click anywhere on the map below to set your shop location.</p>
+            </div>
+          )}
+
+          <div className="h-72 rounded-2xl overflow-hidden border-2 border-dashed border-muted-foreground/20 z-0">
+            <MapLocationPicker
+              initialPosition={
+                store.latitude && store.longitude
+                  ? [store.latitude, store.longitude]
+                  : [23.8103, 90.4125]
+              }
+              onLocationSelect={(lat, lng) => {
+                setStore({ ...store, latitude: lat, longitude: lng });
+                setHasPinnedLocation(true);
+              }}
+            />
           </div>
         </div>
 
