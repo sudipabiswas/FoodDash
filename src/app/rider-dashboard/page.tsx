@@ -127,7 +127,7 @@ export default function RiderDashboard() {
 
   const activeOrders = Array.isArray(myTasks) ? myTasks.filter(o => o.status !== "DELIVERED" && o.status !== "CANCELLED") : [];
   const completedOrders = Array.isArray(myTasks) ? myTasks.filter(o => o.status === "DELIVERED") : [];
-  const totalEarnings = completedOrders.reduce((sum, o) => sum + (Number(o.deliveryCharge) || 0), 0);
+  const totalEarnings = completedOrders.reduce((sum, o) => sum + (Number(o.deliveryCharge ?? o.store?.deliveryCharge) || 0), 0);
 
   if (!isMounted || loading) {
     return (
@@ -264,7 +264,7 @@ export default function RiderDashboard() {
                                     <DollarSign className="h-5 w-5 text-green-600" />
                                     <div>
                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Earnings</p>
-                                       <p className="font-black text-green-600 text-base">${(Number(order.deliveryCharge) || 0).toFixed(2)}</p>
+                                       <p className="font-black text-green-600 text-base">${(Number(order.deliveryCharge ?? order.store?.deliveryCharge) || 0).toFixed(2)}</p>
                                     </div>
                                  </div>
                                  <div className="flex items-center gap-3">
@@ -318,7 +318,7 @@ export default function RiderDashboard() {
                               <span className="font-black text-muted-foreground">#{order.id.slice(-6).toUpperCase()}</span>
                            </div>
                            <div className="flex items-center gap-4">
-                              <p className="font-black text-primary text-xl">${(Number(order.deliveryCharge) || 0).toFixed(2)}</p>
+                              <p className="font-black text-primary text-xl">${(Number(order.deliveryCharge ?? order.store?.deliveryCharge) || 0).toFixed(2)}</p>
                               {order.status === "ACCEPTED" && (
                                 <button 
                                   onClick={() => handleCancelAssignment(order.id)}
@@ -417,7 +417,7 @@ export default function RiderDashboard() {
                           <tr key={order.id} className="hover:bg-muted/20 transition-colors">
                              <td className="px-8 py-6 font-bold text-sm">#{order.id.slice(-6).toUpperCase()}</td>
                              <td className="px-8 py-6 font-bold text-sm">{order.store?.name}</td>
-                             <td className="px-8 py-6 font-black text-primary">${(Number(order.deliveryCharge) || 0).toFixed(2)}</td>
+                             <td className="px-8 py-6 font-black text-primary">${(Number(order.deliveryCharge ?? order.store?.deliveryCharge) || 0).toFixed(2)}</td>
                              <td className="px-8 py-6 text-muted-foreground text-sm font-medium">{new Date(order.createdAt).toLocaleDateString()}</td>
                           </tr>
                         ))}
