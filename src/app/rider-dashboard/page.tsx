@@ -49,8 +49,14 @@ export default function RiderDashboard() {
         fetch("/api/rider/orders/my-tasks")
       ]);
       
-      if (availRes.ok) setAvailableOrders(await availRes.json());
-      if (tasksRes.ok) setMyTasks(await tasksRes.json());
+      if (availRes.ok) {
+        const data = await availRes.json();
+        setAvailableOrders(Array.isArray(data) ? data : []);
+      }
+      if (tasksRes.ok) {
+        const data = await tasksRes.json();
+        setMyTasks(Array.isArray(data) ? data : []);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -119,9 +125,9 @@ export default function RiderDashboard() {
     }
   };
 
-  const activeOrders = myTasks.filter(o => o.status !== "DELIVERED" && o.status !== "CANCELLED");
-  const completedOrders = myTasks.filter(o => o.status === "DELIVERED");
-  const totalEarnings = completedOrders.reduce((sum, o) => sum + (o.deliveryCharge || 0), 0);
+  const activeOrders = Array.isArray(myTasks) ? myTasks.filter(o => o.status !== "DELIVERED" && o.status !== "CANCELLED") : [];
+  const completedOrders = Array.isArray(myTasks) ? myTasks.filter(o => o.status === "DELIVERED") : [];
+  const totalEarnings = completedOrders.reduce((sum, o) => sum + (Number(o.deliveryCharge) || 0), 0);
 
   if (!isMounted || loading) {
     return (
@@ -245,14 +251,14 @@ export default function RiderDashboard() {
                                     <DollarSign className="h-5 w-5 text-green-600" />
                                     <div>
                                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Your Pay</p>
-                                       <p className="font-bold text-green-600">${(order.deliveryCharge || 5).toFixed(2)}</p>
+                                       <p className="font-bold text-green-600">${(Number(order.deliveryCharge) || 0).toFixed(2)}</p>
                                     </div>
                                  </div>
                                  <div className="flex items-center gap-3">
                                     <Package className="h-5 w-5 text-muted-foreground" />
                                     <div>
                                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Bill Total</p>
-                                       <p className="font-bold text-sm">${order.totalAmount.toFixed(2)}</p>
+                                       <p className="font-bold text-sm">${(Number(order.totalAmount) || 0).toFixed(2)}</p>
                                     </div>
                                  </div>
                               </div>
@@ -299,7 +305,7 @@ export default function RiderDashboard() {
                               <span className="font-black text-muted-foreground">#{order.id.slice(-6).toUpperCase()}</span>
                            </div>
                            <div className="flex items-center gap-4">
-                              <p className="font-black text-primary text-xl">${(order.deliveryCharge || 5).toFixed(2)}</p>
+                              <p className="font-black text-primary text-xl">${(Number(order.deliveryCharge) || 0).toFixed(2)}</p>
                               {order.status === "ACCEPTED" && (
                                 <button 
                                   onClick={() => handleCancelAssignment(order.id)}
@@ -398,7 +404,7 @@ export default function RiderDashboard() {
                           <tr key={order.id} className="hover:bg-muted/20 transition-colors">
                              <td className="px-8 py-6 font-bold text-sm">#{order.id.slice(-6).toUpperCase()}</td>
                              <td className="px-8 py-6 font-bold text-sm">{order.store?.name}</td>
-                             <td className="px-8 py-6 font-black text-primary">${(order.deliveryCharge || 5).toFixed(2)}</td>
+                             <td className="px-8 py-6 font-black text-primary">${(Number(order.deliveryCharge) || 0).toFixed(2)}</td>
                              <td className="px-8 py-6 text-muted-foreground text-sm font-medium">{new Date(order.createdAt).toLocaleDateString()}</td>
                           </tr>
                         ))}
