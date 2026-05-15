@@ -64,6 +64,27 @@ export default function RiderDashboard() {
     }
   };
 
+  const handleCancelAssignment = async (orderId: string) => {
+    if (!confirm("Are you sure you want to release this order? It will be available for other riders.")) return;
+
+    try {
+      const res = await fetch("/api/rider/orders/cancel-assignment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId }),
+      });
+
+      if (res.ok) {
+        toast.success("Order released successfully");
+        fetchOrders();
+      } else {
+        toast.error("Failed to release order");
+      }
+    } catch (err) {
+      toast.error("An error occurred");
+    }
+  };
+
   const handleUpdateStatus = async (orderId: string, status: string) => {
     try {
       const res = await fetch("/api/rider/orders/status", {
@@ -262,7 +283,17 @@ export default function RiderDashboard() {
                               </div>
                               <span className="font-black text-muted-foreground">#{order.id.slice(-6).toUpperCase()}</span>
                            </div>
-                           <p className="font-black text-primary text-xl">${(order.deliveryCharge || 5).toFixed(2)}</p>
+                           <div className="flex items-center gap-4">
+                              <p className="font-black text-primary text-xl">${(order.deliveryCharge || 5).toFixed(2)}</p>
+                              {order.status === "ACCEPTED" && (
+                                <button 
+                                  onClick={() => handleCancelAssignment(order.id)}
+                                  className="px-4 py-2 bg-red-50 text-red-600 border border-red-100 rounded-xl font-bold text-xs hover:bg-red-100 transition-all"
+                                >
+                                  Release Order
+                                </button>
+                              )}
+                           </div>
                         </div>
                      </div>
 
