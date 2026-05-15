@@ -27,8 +27,9 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  try {
+    try {
     const data = await req.json();
+    console.log("Updating store with data:", data);
     const updateData: any = {};
 
     if (data.name !== undefined) updateData.name = data.name;
@@ -38,10 +39,16 @@ export async function PATCH(req: Request) {
     if (data.image !== undefined) updateData.image = data.image;
     if (data.mainCategories !== undefined) updateData.mainCategories = data.mainCategories;
     if (data.address !== undefined) updateData.address = data.address;
-    if (data.latitude !== undefined && data.latitude !== null) updateData.latitude = parseFloat(data.latitude);
-    if (data.longitude !== undefined && data.longitude !== null) updateData.longitude = parseFloat(data.longitude);
+    
+    if (data.latitude !== undefined) {
+      updateData.latitude = data.latitude === null ? null : parseFloat(data.latitude.toString());
+    }
+    if (data.longitude !== undefined) {
+      updateData.longitude = data.longitude === null ? null : parseFloat(data.longitude.toString());
+    }
+
     if (data.deliveryCharge !== undefined && data.deliveryCharge !== "") {
-      const charge = parseFloat(data.deliveryCharge);
+      const charge = parseFloat(data.deliveryCharge.toString());
       if (!isNaN(charge)) {
         updateData.deliveryCharge = charge;
       }
@@ -54,6 +61,8 @@ export async function PATCH(req: Request) {
     if (!store) {
       return NextResponse.json({ error: "Store not found" }, { status: 404 });
     }
+
+    console.log("Found store, applying updates:", updateData);
 
     const updatedStore = await prisma.store.update({
       where: { id: store.id },
@@ -69,8 +78,12 @@ export async function PATCH(req: Request) {
     }
 
     return NextResponse.json(updatedStore);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Store update error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ 
+      error: "Internal server error", 
+      details: error.message,
+      prismaError: error.code 
+    }, { status: 500 });
   }
 }

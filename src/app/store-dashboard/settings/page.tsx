@@ -55,29 +55,48 @@ export default function StoreSettingsPage() {
   };
 
   const geocodeAddress = async (address: string) => {
-    if (address.trim().length < 8) return;
+    if (address.trim().length < 5) return;
     setGeocodeStatus("searching");
+    
+    const performSearch = async (query: string) => {
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&addressdetails=1&countrycodes=bd`;
+      const res = await fetch(url, { headers: { "Accept-Language": "en", "User-Agent": "FoodDash-App" } });
+      return await res.json();
+    };
+
     try {
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=5&addressdetails=1`;
-      const res = await fetch(url, { headers: { "Accept-Language": "en" } });
-      const results = await res.json();
+      let results = await performSearch(address);
+
+      // Fallback: If full address fails, try stripping "House XX, " or "Plot XX, " from the start
+      if ((!results || results.length === 0) && (address.toLowerCase().includes("house") || address.toLowerCase().includes("plot"))) {
+        console.log("Full address failed, trying fallback search...");
+        const fallbackQuery = address.replace(/^(house|plot)\s*\d+,\s*/i, "");
+        if (fallbackQuery !== address) {
+          results = await performSearch(fallbackQuery);
+        }
+      }
 
       if (!results || results.length === 0) {
         setGeocodeStatus("notfound");
-        toast.error("Address not found. Please include street, area, and city.", { icon: "📍" });
+        toast.error("Location not found. Try simplifying the address (e.g., Road 10, Block A, Vatara).", { icon: "📍" });
         return;
       }
 
       const best = results[0];
+      const details = best.address || {};
       const importance = parseFloat(best.importance ?? "0");
 
-      // Vague if importance is low (broad region) or multiple very different results exist
-      if (importance < 0.4 && results.length > 2) {
+      // Check for specific details to ensure precision
+      const hasRoad = !!(details.road || details.street || details.pedestrian || details.cycleway || details.suburb);
+      const hasHouseNumber = !!(details.house_number || details.building);
+      const hasCity = !!(details.city || details.town || details.village || details.state_district);
+
+      console.log("Geocoding result:", { importance, hasRoad, hasHouseNumber, hasCity, best });
+
+      // If we don't even have a road or a suburb, it's too vague
+      if (!hasRoad && !hasCity) {
         setGeocodeStatus("vague");
-        toast(
-          "Address is too vague. Please include a house/building number, street name, and city for a precise pin.",
-          { icon: "⚠️", duration: 5000 }
-        );
+        toast("Address found but too broad. Please pin your shop manually on the map for accuracy.", { icon: "⚠️", duration: 5000 });
         return;
       }
 
@@ -87,10 +106,13 @@ export default function StoreSettingsPage() {
       setStore(prev => ({ ...prev, latitude: lat, longitude: lng }));
       setHasPinnedLocation(true);
       setGeocodeStatus("found");
-      toast.success(`Pinned: ${best.display_name.split(",").slice(0, 3).join(",")}`, { duration: 3000 });
+      
+      const locationLabel = best.display_name.split(",").slice(0, 2).join(", ");
+      toast.success(`Pinned near: ${locationLabel}`, { duration: 3000 });
     } catch (err) {
+      console.error("Geocoding error:", err);
       setGeocodeStatus("idle");
-      toast.error("Geocoding failed. Check your connection.");
+      toast.error("Geocoding service unavailable. Please try again or pin manually.");
     }
   };
 
@@ -152,10 +174,14 @@ export default function StoreSettingsPage() {
         setTimeout(() => setMessage(""), 3000);
       } else {
         const data = await res.json();
-        setMessage(`Error: ${data.error}`);
+        const errorMsg = data.details 
+          ? `${data.error}: ${data.details}${data.prismaError ? ` (${data.prismaError})` : ""}`
+          : data.error || "Failed to update settings";
+        setMessage(`Error: ${errorMsg}`);
       }
-    } catch (err) {
-      setMessage("Failed to update settings");
+    } catch (err: any) {
+      console.error("Submit error:", err);
+      setMessage(`Error: ${err.message || "Failed to connect to server"}`);
     } finally {
       setSaving(false);
     }
@@ -254,7 +280,7 @@ export default function StoreSettingsPage() {
                     }}
                     placeholder="e.g. 123 Motijheel, Dhaka, Bangladesh"
                   />
-                  <div className="absolute right-3 top-3.5">
+                  <div className="absolute right-3 top-3.5 flex items-center gap-2">
                     {geocodeStatus === "searching" && (
                       <Loader2 className="h-4 w-4 animate-spin text-primary" />
                     )}
@@ -265,7 +291,14 @@ export default function StoreSettingsPage() {
                       <span className="text-amber-500 text-xs font-bold">?</span>
                     )}
                     {geocodeStatus === "idle" && store.address && (
-                      <Search className="h-4 w-4 text-muted-foreground/40" />
+                      <button 
+                        type="button"
+                        onClick={() => geocodeAddress(store.address)}
+                        className="p-0.5 hover:bg-muted rounded-md transition-colors"
+                        title="Search location"
+                      >
+                        <Search className="h-4 w-4 text-primary" />
+                      </button>
                     )}
                   </div>
                 </div>
