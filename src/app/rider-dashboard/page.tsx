@@ -515,46 +515,183 @@ export default function RiderDashboard() {
            </div>
         </div>
 
-        {/* 8. Performance Highlights */}
-        <div className="grid grid-cols-2 gap-4">
-           <div className="bg-white border rounded-[2rem] p-6 space-y-4">
-              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500">
-                 <Zap className="h-5 w-5" />
+        {/* Growth View */}
+        {activeTab === "growth" && (
+           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="bg-white border rounded-[3rem] p-10 space-y-6 shadow-xl shadow-slate-200/50">
+                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">Financial Health</h2>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="p-6 bg-green-50 rounded-[2rem] border border-green-100">
+                       <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">Available for Cashout</p>
+                       <p className="text-3xl font-black text-green-700">${(todayEarnings + weekEarnings).toFixed(2)}</p>
+                    </div>
+                    <div className="p-6 bg-blue-50 rounded-[2rem] border border-blue-100">
+                       <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Target Monthly</p>
+                       <p className="text-3xl font-black text-blue-700">$500</p>
+                    </div>
+                 </div>
+                 <button className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-xl shadow-slate-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                    Withdraw to Bank
+                 </button>
               </div>
-              <div>
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">On-Time %</p>
-                 <p className="text-2xl font-black text-slate-900">98.2%</p>
+
+              <div className="bg-white border rounded-[3rem] p-8 space-y-6 shadow-xl shadow-slate-200/50">
+                 <div className="flex justify-between items-center px-2">
+                    <h3 className="font-black text-slate-900 uppercase tracking-widest text-xs">Recent Income</h3>
+                    <TrendingUp className="h-4 w-4 text-green-500" />
+                 </div>
+                 <div className="space-y-4">
+                    {completedOrders.slice(0, 5).map(o => (
+                       <div key={o.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                          <div className="flex items-center gap-3">
+                             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border text-slate-400">
+                                <Package className="h-5 w-5" />
+                             </div>
+                             <div>
+                                <p className="font-black text-slate-900 text-sm">{o.store?.name}</p>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase">{new Date(o.createdAt).toLocaleDateString()}</p>
+                             </div>
+                          </div>
+                          <p className="font-black text-green-600">+${(Number(o.deliveryCharge ?? o.store?.deliveryCharge) || 0).toFixed(2)}</p>
+                       </div>
+                    ))}
+                 </div>
               </div>
            </div>
-           <div className="bg-white border rounded-[2rem] p-6 space-y-4">
-              <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-500">
-                 <ShieldCheck className="h-5 w-5" />
+        )}
+
+        {/* Badge View */}
+        {activeTab === "badge" && (
+           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="bg-white border rounded-[3rem] p-12 text-center space-y-6 shadow-xl shadow-slate-200/50">
+                 <div className="relative w-32 h-32 mx-auto">
+                    <div className="absolute inset-0 bg-yellow-400/20 blur-3xl rounded-full animate-pulse" />
+                    <div className="relative w-32 h-32 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-2xl border-4 border-white">
+                       <Award className="h-16 w-16 text-white" />
+                    </div>
+                 </div>
+                 <div className="space-y-2">
+                    <h2 className="text-3xl font-black text-slate-900 tracking-tighter">Silver Elite</h2>
+                    <p className="text-slate-500 font-medium">Top 5% Rider in Dhaka North</p>
+                 </div>
+                 <div className="flex justify-center gap-2">
+                    {[1,2,3,4,5].map(i => (
+                       <Star key={i} className={`h-6 w-6 ${i <= 4 ? "text-yellow-400 fill-current" : "text-slate-200"}`} />
+                    ))}
+                 </div>
               </div>
-              <div>
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Safety Score</p>
-                 <p className="text-2xl font-black text-slate-900">4.9</p>
+
+              <div className="grid gap-4">
+                 <div className="bg-white border rounded-[2rem] p-8 flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-4">
+                       <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-500">
+                          <Zap className="h-6 w-6" />
+                       </div>
+                       <div>
+                          <p className="font-black text-slate-900">Flash Delivery</p>
+                          <p className="text-xs text-slate-500 font-medium">Deliver 5 orders under 20 mins</p>
+                       </div>
+                    </div>
+                    <div className="text-[10px] font-black text-purple-500 uppercase">3/5 Done</div>
+                 </div>
+                 <div className="bg-white border rounded-[2rem] p-8 flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-4">
+                       <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-500">
+                          <Target className="h-6 w-6" />
+                       </div>
+                       <div>
+                          <p className="font-black text-slate-900">Zone Master</p>
+                          <p className="text-xs text-slate-500 font-medium">100 orders in current zone</p>
+                       </div>
+                    </div>
+                    <div className="text-[10px] font-black text-blue-500 uppercase">82/100</div>
+                 </div>
               </div>
            </div>
-        </div>
+        )}
+
+        {/* More View */}
+        {activeTab === "more" && (
+           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="bg-white border rounded-[3rem] p-8 space-y-6 shadow-xl shadow-slate-200/50">
+                 <div className="flex items-center gap-6">
+                    <div className="w-24 h-24 rounded-full bg-slate-100 border-4 border-white shadow-xl flex items-center justify-center relative">
+                       <Bike className="h-12 w-12 text-primary" />
+                       <div className="absolute bottom-0 right-0 w-8 h-8 bg-green-500 border-4 border-white rounded-full" />
+                    </div>
+                    <div>
+                       <h2 className="text-2xl font-black text-slate-900">{session?.user?.name || "Rider Name"}</h2>
+                       <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest mb-2">ID: RD-88291</p>
+                       <button className="px-4 py-1.5 bg-slate-100 text-slate-900 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">
+                          Edit Profile
+                       </button>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="bg-white border rounded-[3rem] p-4 shadow-xl shadow-slate-200/50 divide-y">
+                 <button className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-all first:rounded-t-[2.5rem]">
+                    <div className="flex items-center gap-4">
+                       <Bell className="h-5 w-5 text-slate-400" />
+                       <span className="font-black text-slate-800 text-sm uppercase tracking-widest">Notification Settings</span>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-slate-300" />
+                 </button>
+                 <button className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-all">
+                    <div className="flex items-center gap-4">
+                       <ShieldCheck className="h-5 w-5 text-slate-400" />
+                       <span className="font-black text-slate-800 text-sm uppercase tracking-widest">Vehicle Safety</span>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-slate-300" />
+                 </button>
+                 <button className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-all">
+                    <div className="flex items-center gap-4">
+                       <Wallet className="h-5 w-5 text-slate-400" />
+                       <span className="font-black text-slate-800 text-sm uppercase tracking-widest">Bank Details</span>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-slate-300" />
+                 </button>
+                 <button className="w-full p-6 flex items-center justify-between hover:bg-red-50 transition-all last:rounded-b-[2.5rem] group">
+                    <div className="flex items-center gap-4">
+                       <Power className="h-5 w-5 text-red-400" />
+                       <span className="font-black text-red-600 text-sm uppercase tracking-widest">Logout System</span>
+                    </div>
+                    <ArrowRight className="h-5 w-5 text-red-300 group-hover:translate-x-2 transition-transform" />
+                 </button>
+              </div>
+           </div>
+        )}
 
       </div>
 
       {/* Bottom Nav Mock */}
       <div className="fixed bottom-0 inset-x-0 bg-white border-t px-8 py-4 z-50">
          <div className="container mx-auto max-w-lg flex items-center justify-between">
-            <button className="flex flex-col items-center gap-1 text-primary">
+            <button 
+              onClick={() => setActiveTab("home")}
+              className={`flex flex-col items-center gap-1 transition-all ${activeTab === "home" ? "text-primary scale-110" : "text-slate-400 hover:text-slate-600"}`}
+            >
                <Bike className="h-6 w-6" />
                <span className="text-[8px] font-black uppercase tracking-widest">Home</span>
             </button>
-            <button className="flex flex-col items-center gap-1 text-slate-400">
+            <button 
+              onClick={() => setActiveTab("growth")}
+              className={`flex flex-col items-center gap-1 transition-all ${activeTab === "growth" ? "text-primary scale-110" : "text-slate-400 hover:text-slate-600"}`}
+            >
                <TrendingUp className="h-6 w-6" />
                <span className="text-[8px] font-black uppercase tracking-widest">Growth</span>
             </button>
-            <button className="flex flex-col items-center gap-1 text-slate-400">
+            <button 
+              onClick={() => setActiveTab("badge")}
+              className={`flex flex-col items-center gap-1 transition-all ${activeTab === "badge" ? "text-primary scale-110" : "text-slate-400 hover:text-slate-600"}`}
+            >
                <Award className="h-6 w-6" />
                <span className="text-[8px] font-black uppercase tracking-widest">Badge</span>
             </button>
-            <button className="flex flex-col items-center gap-1 text-slate-400">
+            <button 
+              onClick={() => setActiveTab("more")}
+              className={`flex flex-col items-center gap-1 transition-all ${activeTab === "more" ? "text-primary scale-110" : "text-slate-400 hover:text-slate-600"}`}
+            >
                <MoreVertical className="h-6 w-6" />
                <span className="text-[8px] font-black uppercase tracking-widest">More</span>
             </button>
