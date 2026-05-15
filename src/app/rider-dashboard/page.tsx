@@ -241,8 +241,21 @@ export default function RiderDashboard() {
                                     {order.items?.map((item: any) => (
                                        <div key={item.id} className="flex justify-between text-xs font-medium">
                                           <span>{item.quantity}x {item.product?.name}</span>
+                                          <span>${(Number(item.price) * item.quantity).toFixed(2)}</span>
                                        </div>
                                     ))}
+                                 </div>
+                                 <div className="mt-4 pt-2 border-t border-dashed space-y-1">
+                                    <div className="flex justify-between text-xs font-bold text-muted-foreground">
+                                       <span>Subtotal</span>
+                                       <span>${((Number(order.totalPrice) || 0) - (Number(order.deliveryCharge) || 0) + (Number(order.discount) || 0)).toFixed(2)}</span>
+                                    </div>
+                                    {(Number(order.discount) || 0) > 0 && (
+                                       <div className="flex justify-between text-xs font-bold text-red-500">
+                                          <span>Discount</span>
+                                          <span>-${Number(order.discount).toFixed(2)}</span>
+                                       </div>
+                                    )}
                                  </div>
                               </div>
 
@@ -250,15 +263,15 @@ export default function RiderDashboard() {
                                  <div className="flex items-center gap-3">
                                     <DollarSign className="h-5 w-5 text-green-600" />
                                     <div>
-                                       <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Your Pay</p>
-                                       <p className="font-bold text-green-600">${(Number(order.deliveryCharge) || 0).toFixed(2)}</p>
+                                       <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Earnings</p>
+                                       <p className="font-black text-green-600 text-base">${(Number(order.deliveryCharge) || 0).toFixed(2)}</p>
                                     </div>
                                  </div>
                                  <div className="flex items-center gap-3">
                                     <Package className="h-5 w-5 text-muted-foreground" />
                                     <div>
-                                       <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Bill Total</p>
-                                       <p className="font-bold text-sm">${(Number(order.totalAmount) || 0).toFixed(2)}</p>
+                                       <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Customer Bill</p>
+                                       <p className="font-bold text-sm text-foreground">${(Number(order.totalPrice) || 0).toFixed(2)}</p>
                                     </div>
                                  </div>
                               </div>
