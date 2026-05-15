@@ -34,7 +34,8 @@ export default function RiderDashboard() {
   const [availableOrders, setAvailableOrders] = useState<any[]>([]);
   const [myTasks, setMyTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("home"); // home, earnings, performance
+  const [activeTab, setActiveTab] = useState("home");
+  const [period, setPeriod] = useState("daily");
   const [isOnline, setIsOnline] = useState(true);
   const [isBusy, setIsBusy] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
