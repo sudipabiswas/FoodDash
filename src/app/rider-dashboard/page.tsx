@@ -48,8 +48,10 @@ function RiderDashboardContent() {
   const [activeTab, setActiveTab] = useState(tabParam || "home");
   const [period, setPeriod] = useState("daily");
   
-  // Hardcoded Rider position (e.g. Central Dhaka) for testing if geolocation isn't available
+  // Live GPS — starts with Dhaka fallback, gets replaced by real coords once browser grants permission
   const [riderPos, setRiderPos] = useState<[number, number]>([23.8120, 90.4100]);
+  const [gpsStatus, setGpsStatus] = useState<"acquiring" | "live" | "denied" | "fallback">("acquiring");
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
   const [distances, setDistances] = useState<Record<string, { pickup: number, drop: number, total: number, allowance: number }>>({});
   const [timers, setTimers] = useState<Record<string, number>>({});
 
@@ -71,6 +73,29 @@ function RiderDashboardContent() {
     setIsMounted(true);
     fetchOrders();
     const interval = setInterval(fetchOrders, 10000);
+
+    // --- Live GPS tracking ---
+    if (!navigator.geolocation) {
+      setGpsStatus("fallback");
+    } else {
+      const watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          setRiderPos([pos.coords.latitude, pos.coords.longitude]);
+          setGpsAccuracy(Math.round(pos.coords.accuracy));
+          setGpsStatus("live");
+        },
+        (err) => {
+          console.warn("GPS error:", err.message);
+          setGpsStatus(err.code === 1 ? "denied" : "fallback");
+        },
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+      );
+      return () => {
+        clearInterval(interval);
+        navigator.geolocation.clearWatch(watchId);
+      };
+    }
+
     return () => clearInterval(interval);
   }, []);
 
@@ -82,34 +107,32 @@ function RiderDashboardContent() {
       const allOrders = [...availableOrders, ...myTasks];
       
       allOrders.forEach(order => {
-        if (!newDistances[order.id]) {
-          const storeLat = order.store?.latitude;
-          const storeLng = order.store?.longitude;
-          const custLat = order.deliveryLat;
-          const custLng = order.deliveryLng;
-          
-          let pickupDist = 0;
-          let dropDist = 0;
-          
-          if (storeLat && storeLng) {
-            pickupDist = calculateDistance(riderPos[0], riderPos[1], storeLat, storeLng);
-          }
-          if (storeLat && storeLng && custLat && custLng) {
-            dropDist = calculateDistance(storeLat, storeLng, custLat, custLng);
-          }
-          
-          const totalDist = pickupDist + dropDist;
-          // Charge $1.50 per km allowance
-          const calculatedAllowance = Math.max(2.5, totalDist * 1.5); // Minimum 2.5
-          
-          newDistances[order.id] = {
-            pickup: pickupDist,
-            drop: dropDist,
-            total: totalDist,
-            allowance: calculatedAllowance
-          };
-          newTimers[order.id] = 100;
+        // Always recalculate pickup distance (depends on live riderPos)
+        const storeLat = order.store?.latitude;
+        const storeLng = order.store?.longitude;
+        const custLat = order.deliveryLat;
+        const custLng = order.deliveryLng;
+
+        let pickupDist = 0;
+        let dropDist = 0;
+
+        if (storeLat && storeLng) {
+          pickupDist = calculateDistance(riderPos[0], riderPos[1], storeLat, storeLng);
         }
+        if (storeLat && storeLng && custLat && custLng) {
+          dropDist = calculateDistance(storeLat, storeLng, custLat, custLng);
+        }
+
+        const totalDist = pickupDist + dropDist;
+        const calculatedAllowance = Math.max(2.5, totalDist * 1.5);
+
+        newDistances[order.id] = {
+          pickup: pickupDist,
+          drop: dropDist,
+          total: totalDist,
+          allowance: calculatedAllowance
+        };
+        newTimers[order.id] = timers[order.id] ?? 100;
       });
       setDistances(newDistances);
       setTimers(newTimers);
@@ -293,10 +316,40 @@ function RiderDashboardContent() {
                ) : (
                  <MapTracker riderPos={riderPos} />
                )}
-               <div className="absolute bottom-4 left-6 px-4 py-2 bg-white/90 backdrop-blur rounded-full border shadow-xl flex items-center gap-2 z-[400]">
-                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                  <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Dhaka City Zone</span>
+               {/* GPS Status Badge */}
+               <div className="absolute bottom-4 left-4 z-[400] flex flex-col gap-2">
+                 {gpsStatus === "live" && (
+                   <div className="px-3 py-1.5 bg-green-500 rounded-full flex items-center gap-1.5 shadow-lg">
+                     <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                     <span className="text-[9px] font-black text-white uppercase tracking-widest">GPS Live</span>
+                     {gpsAccuracy && <span className="text-[8px] text-white/80 font-bold">±{gpsAccuracy}m</span>}
+                   </div>
+                 )}
+                 {gpsStatus === "acquiring" && (
+                   <div className="px-3 py-1.5 bg-amber-500 rounded-full flex items-center gap-1.5 shadow-lg">
+                     <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+                     <span className="text-[9px] font-black text-white uppercase tracking-widest">Acquiring GPS…</span>
+                   </div>
+                 )}
+                 {gpsStatus === "denied" && (
+                   <div className="px-3 py-1.5 bg-red-500 rounded-full flex items-center gap-1.5 shadow-lg">
+                     <span className="text-[9px] font-black text-white uppercase tracking-widest">⚠ GPS Denied</span>
+                   </div>
+                 )}
+                 {gpsStatus === "fallback" && (
+                   <div className="px-3 py-1.5 bg-slate-600 rounded-full flex items-center gap-1.5 shadow-lg">
+                     <span className="text-[9px] font-black text-white uppercase tracking-widest">Fallback Location</span>
+                   </div>
+                 )}
                </div>
+               {/* Live coords */}
+               {gpsStatus === "live" && (
+                 <div className="absolute top-4 right-4 z-[400] px-3 py-1.5 bg-black/60 backdrop-blur rounded-xl">
+                   <span className="text-[8px] font-mono text-green-300">
+                     {riderPos[0].toFixed(4)}, {riderPos[1].toFixed(4)}
+                   </span>
+                 </div>
+               )}
             </div>
 
             {/* 3. Live Feed Header */}
