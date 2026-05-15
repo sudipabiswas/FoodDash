@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { 
   Bike, 
   Package, 
@@ -31,13 +32,28 @@ import {
 import toast from "react-hot-toast";
 import { useSession, signOut } from "next-auth/react";
 
-export default function RiderDashboard() {
+function RiderDashboardContent() {
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const tabParam = searchParams.get("tab");
+  
   const [availableOrders, setAvailableOrders] = useState<any[]>([]);
   const [myTasks, setMyTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("home");
+  const [activeTab, setActiveTab] = useState(tabParam || "home");
   const [period, setPeriod] = useState("daily");
+
+  useEffect(() => {
+    if (tabParam && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    router.push(`/rider-dashboard?tab=${tab}`, { scroll: false });
+  };
   const [isOnline, setIsOnline] = useState(true);
   const [isBusy, setIsBusy] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -560,10 +576,10 @@ export default function RiderDashboard() {
       {/* Bottom Nav */}
       <div className="fixed bottom-0 inset-x-0 bg-white border-t px-8 py-4 z-50">
          <div className="container mx-auto max-w-lg flex items-center justify-between">
-            <button onClick={() => setActiveTab("home")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "home" ? "text-primary scale-110" : "text-slate-400 hover:text-slate-600"}`}><Bike className="h-6 w-6" /><span className="text-[8px] font-black uppercase tracking-widest">Home</span></button>
-            <button onClick={() => setActiveTab("growth")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "growth" ? "text-primary scale-110" : "text-slate-400 hover:text-slate-600"}`}><TrendingUp className="h-6 w-6" /><span className="text-[8px] font-black uppercase tracking-widest">Growth</span></button>
-            <button onClick={() => setActiveTab("dutyrecord")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "dutyrecord" ? "text-primary scale-110" : "text-slate-400 hover:text-slate-600"}`}><ClipboardList className="h-6 w-6" /><span className="text-[8px] font-black uppercase tracking-widest">Duty Record</span></button>
-            <button onClick={() => setActiveTab("settings")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "settings" ? "text-primary scale-110" : "text-slate-400 hover:text-slate-600"}`}><Settings className="h-6 w-6" /><span className="text-[8px] font-black uppercase tracking-widest">Settings</span></button>
+            <button onClick={() => handleTabChange("home")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "home" ? "text-primary scale-110" : "text-slate-400 hover:text-slate-600"}`}><Bike className="h-6 w-6" /><span className="text-[8px] font-black uppercase tracking-widest">Home</span></button>
+            <button onClick={() => handleTabChange("growth")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "growth" ? "text-primary scale-110" : "text-slate-400 hover:text-slate-600"}`}><TrendingUp className="h-6 w-6" /><span className="text-[8px] font-black uppercase tracking-widest">Earnings</span></button>
+            <button onClick={() => handleTabChange("dutyrecord")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "dutyrecord" ? "text-primary scale-110" : "text-slate-400 hover:text-slate-600"}`}><ClipboardList className="h-6 w-6" /><span className="text-[8px] font-black uppercase tracking-widest">Duty Record</span></button>
+            <button onClick={() => handleTabChange("settings")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === "settings" ? "text-primary scale-110" : "text-slate-400 hover:text-slate-600"}`}><Settings className="h-6 w-6" /><span className="text-[8px] font-black uppercase tracking-widest">Settings</span></button>
          </div>
       </div>
     </div>
@@ -575,5 +591,13 @@ function StoreIcon(props: any) {
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7" /><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4" /><path d="M2 7h20" /><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7" />
     </svg>
+  );
+}
+
+export default function RiderDashboard() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Bike className="h-12 w-12 text-primary animate-bounce" /></div>}>
+      <RiderDashboardContent />
+    </Suspense>
   );
 }
