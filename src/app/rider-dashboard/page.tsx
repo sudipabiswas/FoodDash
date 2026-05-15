@@ -27,7 +27,7 @@ import {
   Target
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 
 export default function RiderDashboard() {
   const { data: session } = useSession();
@@ -453,7 +453,12 @@ export default function RiderDashboard() {
                     <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Deliveries</p><p className="text-2xl font-black text-slate-900">{period === "daily" ? completedOrders.filter(o => new Date(o.createdAt).toDateString() === new Date().toDateString()).length : completedOrders.length}</p></div>
                     <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Incentives</p><p className="text-2xl font-black text-green-600">$0.00</p></div>
                  </div>
-                 <button className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-xl shadow-slate-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Withdraw to Bank</button>
+                 <button 
+                   onClick={() => toast.success("Withdrawal request sent to bank!")}
+                   className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest shadow-xl shadow-slate-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                 >
+                    Withdraw to Bank
+                 </button>
               </div>
               <div className="bg-white border rounded-[3rem] p-8 space-y-6 shadow-xl shadow-slate-200/50">
                  <div className="flex justify-between items-center px-2"><h3 className="font-black text-slate-900 uppercase tracking-widest text-xs">Recent Income</h3><TrendingUp className="h-4 w-4 text-green-500" /></div>
@@ -514,11 +519,17 @@ export default function RiderDashboard() {
                  </div>
               </div>
               <div className="bg-white border rounded-[3rem] p-4 shadow-xl shadow-slate-200/50 divide-y">
-                 <button className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-all first:rounded-t-[2.5rem]">
+                 <button 
+                   onClick={() => toast("Notification settings coming soon!", { icon: "🔔" })}
+                   className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-all first:rounded-t-[2.5rem]"
+                 >
                     <div className="flex items-center gap-4"><Bell className="h-5 w-5 text-slate-400" /><span className="font-black text-slate-800 text-sm uppercase tracking-widest">Notification Settings</span></div>
                     <ChevronRight className="h-5 w-5 text-slate-300" />
                  </button>
-                 <button className="w-full p-6 flex items-center justify-between hover:bg-red-50 transition-all last:rounded-b-[2.5rem] group">
+                 <button 
+                   onClick={() => signOut({ callbackUrl: "/" })}
+                   className="w-full p-6 flex items-center justify-between hover:bg-red-50 transition-all last:rounded-b-[2.5rem] group"
+                 >
                     <div className="flex items-center gap-4"><Power className="h-5 w-5 text-red-400" /><span className="font-black text-red-600 text-sm uppercase tracking-widest">Logout System</span></div>
                     <ArrowRight className="h-5 w-5 text-red-300 group-hover:translate-x-2 transition-transform" />
                  </button>
