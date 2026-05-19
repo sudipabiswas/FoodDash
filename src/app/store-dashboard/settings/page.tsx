@@ -61,24 +61,124 @@ export default function StoreSettingsPage() {
     const performSearch = async (query: string) => {
       const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&addressdetails=1&countrycodes=bd`;
       const res = await fetch(url, { headers: { "Accept-Language": "en", "User-Agent": "FoodDash-App" } });
+      if (!res.ok) throw new Error("Geocoding request failed");
       return await res.json();
     };
 
-    try {
-      let results = await performSearch(address);
+    const generateFallbacks = (addr: string): string[] => {
+      const candidates: string[] = [];
+      const normalize = (str: string) => str.replace(/\s+/g, " ").trim();
 
-      // Fallback: If full address fails, try stripping "House XX, " or "Plot XX, " from the start
-      if ((!results || results.length === 0) && (address.toLowerCase().includes("house") || address.toLowerCase().includes("plot"))) {
-        console.log("Full address failed, trying fallback search...");
-        const fallbackQuery = address.replace(/^(house|plot)\s*\d+,\s*/i, "");
-        if (fallbackQuery !== address) {
-          results = await performSearch(fallbackQuery);
+      candidates.push(normalize(addr));
+
+      const parts = addr.split(",").map(p => p.trim()).filter(Boolean);
+
+      // 1. Remove first part if it matches house/plot/flat/holding/numeric patterns
+      if (parts.length > 1) {
+        const firstLower = parts[0].toLowerCase();
+        if (
+          firstLower.includes("house") ||
+          firstLower.includes("plot") ||
+          firstLower.includes("flat") ||
+          firstLower.includes("holding") ||
+          /^\d+/.test(parts[0])
+        ) {
+          candidates.push(normalize(parts.slice(1).join(", ")));
+        }
+      }
+
+      // Helper to clean individual parts
+      const cleanTerm = (p: string) => {
+        p = p.replace(/\bblock\s*-?\s*[a-z]\b/i, "");
+        p = p.replace(/\b(sector|sec)\s*-?\s*\d+\b/i, "");
+        p = p.replace(/\bhouse\s*-?\s*\d+\b/i, "");
+        p = p.replace(/\bplot\s*-?\s*\d+\b/i, "");
+        p = p.replace(/\b(east|west|north|south|purbo|paschim|uttar|dakshin)\s+/i, "");
+        return p;
+      };
+
+      // 2. Clean block, sector, house, plot, directional prefixes from all parts
+      const cleanedParts = parts.map(part => cleanTerm(part)).filter(p => p.trim().length > 0);
+      if (cleanedParts.length > 0) {
+        const cleanedQuery = normalize(cleanedParts.join(", "));
+        if (cleanedQuery !== addr) {
+          candidates.push(cleanedQuery);
+        }
+      }
+
+      // 3. Keep only Road/Street + Suburb + City + Country (if road and suburb exist)
+      const roadPart = parts.find(p => /\b(road|street|ave|avenue|lane|path)\b/i.test(p));
+      const suburbPart = parts.find(p => {
+        const lower = p.toLowerCase();
+        return (
+          !lower.includes("dhaka") &&
+          !lower.includes("bangladesh") &&
+          !lower.includes("road") &&
+          !lower.includes("street") &&
+          !lower.includes("avenue") &&
+          !lower.includes("lane") &&
+          !lower.includes("house") &&
+          !lower.includes("plot") &&
+          !lower.includes("block") &&
+          !lower.includes("sector")
+        );
+      });
+
+      if (roadPart && suburbPart) {
+        const cleanRoad = cleanTerm(roadPart).trim();
+        const cleanSuburb = cleanTerm(suburbPart).trim();
+        if (cleanRoad && cleanSuburb) {
+          candidates.push(normalize(`${cleanRoad}, ${cleanSuburb}, Dhaka, bangladesh`));
+        }
+      }
+
+      // 4. Keep only Suburb + Dhaka + Bangladesh
+      if (suburbPart) {
+        const cleanSuburb = cleanTerm(suburbPart).trim();
+        if (cleanSuburb) {
+          candidates.push(normalize(`${cleanSuburb}, Dhaka, bangladesh`));
+        }
+      }
+
+      // 5. Explicitly check for known areas if suburbPart didn't match well
+      const knownAreas = ["uttara", "banani", "gulshan", "dhanmondi", "mirpur", "badda", "vatara", "motijheel", "khilgaon", "rampura", "mohammadpur", "tejgaon", "lalbagh", "wari"];
+      const foundArea = parts.map(p => p.toLowerCase()).find(p => knownAreas.some(area => p.includes(area)));
+      if (foundArea) {
+        const matchedArea = knownAreas.find(area => foundArea.includes(area));
+        if (matchedArea) {
+          candidates.push(normalize(`${matchedArea}, Dhaka, bangladesh`));
+        }
+      }
+
+      return [...new Set(candidates)].filter(c => c.length > 5);
+    };
+
+    try {
+      const candidates = generateFallbacks(address);
+      let results: any[] = [];
+      let matchedCandidateIndex = -1;
+
+      for (let i = 0; i < candidates.length; i++) {
+        const query = candidates[i];
+        try {
+          const res = await performSearch(query);
+          if (res && res.length > 0) {
+            results = res;
+            matchedCandidateIndex = i;
+            break;
+          }
+        } catch (searchErr) {
+          console.error(`Search failed for candidate "${query}":`, searchErr);
+        }
+        // Small delay if we need to try next candidate
+        if (i < candidates.length - 1) {
+          await new Promise(r => setTimeout(r, 600));
         }
       }
 
       if (!results || results.length === 0) {
         setGeocodeStatus("notfound");
-        toast.error("Location not found. Try simplifying the address (e.g., Road 10, Block A, Vatara).", { icon: "📍" });
+        toast.error("Location not found. Try simplifying the address (e.g., Road 10, Vatara).", { icon: "📍" });
         return;
       }
 
@@ -88,10 +188,9 @@ export default function StoreSettingsPage() {
 
       // Check for specific details to ensure precision
       const hasRoad = !!(details.road || details.street || details.pedestrian || details.cycleway || details.suburb);
-      const hasHouseNumber = !!(details.house_number || details.building);
       const hasCity = !!(details.city || details.town || details.village || details.state_district);
 
-      console.log("Geocoding result:", { importance, hasRoad, hasHouseNumber, hasCity, best });
+      console.log("Geocoding result:", { importance, hasRoad, hasCity, best, matchedCandidateIndex });
 
       // If we don't even have a road or a suburb, it's too vague
       if (!hasRoad && !hasCity) {
@@ -108,7 +207,11 @@ export default function StoreSettingsPage() {
       setGeocodeStatus("found");
       
       const locationLabel = best.display_name.split(",").slice(0, 2).join(", ");
-      toast.success(`Pinned near: ${locationLabel}`, { duration: 3000 });
+      if (matchedCandidateIndex > 0) {
+        toast.success(`Pinned near: ${locationLabel} (approximate location)`, { duration: 4000, icon: "📍" });
+      } else {
+        toast.success(`Pinned near: ${locationLabel}`, { duration: 3000 });
+      }
     } catch (err) {
       console.error("Geocoding error:", err);
       setGeocodeStatus("idle");
