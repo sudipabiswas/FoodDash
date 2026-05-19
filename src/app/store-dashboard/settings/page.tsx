@@ -65,26 +65,41 @@ export default function StoreSettingsPage() {
       return await res.json();
     };
 
+    const cleanAndNormalize = (addr: string): string => {
+      // 1. Remove parentheses and everything inside them (e.g. Plus Codes)
+      let cleaned = addr.replace(/\([^)]*\)/g, "").trim();
+      
+      // 2. Perform common spelling substitutions for Dhaka/Bangladesh context
+      const replacements = [
+        { regex: /\bdakkhin\b/gi, replacement: "dakshin" },
+        { regex: /\bdokkhin\b/gi, replacement: "dakshin" },
+        { regex: /\bdakhin\b/gi, replacement: "dakshin" },
+        { regex: /\bmosjid\b/gi, replacement: "masjid" },
+        { regex: /\bmosque\b/gi, replacement: "masjid" },
+        { regex: /\buttorkhan\b/gi, replacement: "uttarkhan" },
+        { regex: /\bdakkhinkhan\b/gi, replacement: "dakshinkhan" },
+        { regex: /\bdokkhinkhan\b/gi, replacement: "dakshinkhan" }
+      ];
+      
+      for (const r of replacements) {
+        cleaned = cleaned.replace(r.regex, r.replacement);
+      }
+      
+      return cleaned;
+    };
+
     const generateFallbacks = (addr: string): string[] => {
       const candidates: string[] = [];
       const normalize = (str: string) => str.replace(/\s+/g, " ").trim();
 
-      candidates.push(normalize(addr));
+      const baseAddress = cleanAndNormalize(addr);
+      candidates.push(normalize(baseAddress));
 
-      const parts = addr.split(",").map(p => p.trim()).filter(Boolean);
+      const parts = baseAddress.split(",").map(p => p.trim()).filter(Boolean);
 
-      // 1. Remove first part if it matches house/plot/flat/holding/numeric patterns
-      if (parts.length > 1) {
-        const firstLower = parts[0].toLowerCase();
-        if (
-          firstLower.includes("house") ||
-          firstLower.includes("plot") ||
-          firstLower.includes("flat") ||
-          firstLower.includes("holding") ||
-          /^\d+/.test(parts[0])
-        ) {
-          candidates.push(normalize(parts.slice(1).join(", ")));
-        }
+      // Progressively drop parts from the left (more specific to more general)
+      for (let i = 1; i < parts.length; i++) {
+        candidates.push(normalize(parts.slice(i).join(", ")));
       }
 
       // Helper to clean individual parts
@@ -94,63 +109,42 @@ export default function StoreSettingsPage() {
         p = p.replace(/\bhouse\s*-?\s*\d+\b/i, "");
         p = p.replace(/\bplot\s*-?\s*\d+\b/i, "");
         p = p.replace(/\b(east|west|north|south|purbo|paschim|uttar|dakshin)\s+/i, "");
-        return p;
+        return p.trim();
       };
 
-      // 2. Clean block, sector, house, plot, directional prefixes from all parts
-      const cleanedParts = parts.map(part => cleanTerm(part)).filter(p => p.trim().length > 0);
+      // Clean terms and add those candidates
+      const cleanedParts = parts.map(part => cleanTerm(part)).filter(Boolean);
       if (cleanedParts.length > 0) {
         const cleanedQuery = normalize(cleanedParts.join(", "));
-        if (cleanedQuery !== addr) {
+        if (cleanedQuery !== baseAddress) {
           candidates.push(cleanedQuery);
+          // Also progressively drop from left of the cleaned version
+          for (let i = 1; i < cleanedParts.length; i++) {
+            candidates.push(normalize(cleanedParts.slice(i).join(", ")));
+          }
         }
       }
 
-      // 3. Keep only Road/Street + Suburb + City + Country (if road and suburb exist)
-      const roadPart = parts.find(p => /\b(road|street|ave|avenue|lane|path)\b/i.test(p));
-      const suburbPart = parts.find(p => {
-        const lower = p.toLowerCase();
-        return (
-          !lower.includes("dhaka") &&
-          !lower.includes("bangladesh") &&
-          !lower.includes("road") &&
-          !lower.includes("street") &&
-          !lower.includes("avenue") &&
-          !lower.includes("lane") &&
-          !lower.includes("house") &&
-          !lower.includes("plot") &&
-          !lower.includes("block") &&
-          !lower.includes("sector")
-        );
+      // Ensure country is appended if not present
+      const finalCandidates = candidates.map(c => {
+        const lower = c.toLowerCase();
+        if (!lower.includes("bangladesh")) {
+          return `${c}, Bangladesh`;
+        }
+        return c;
       });
 
-      if (roadPart && suburbPart) {
-        const cleanRoad = cleanTerm(roadPart).trim();
-        const cleanSuburb = cleanTerm(suburbPart).trim();
-        if (cleanRoad && cleanSuburb) {
-          candidates.push(normalize(`${cleanRoad}, ${cleanSuburb}, Dhaka, bangladesh`));
-        }
+      // Filter out candidates that are too short or just "Dhaka, Bangladesh" or "Bangladesh"
+      const filtered = finalCandidates.filter(c => {
+        const clean = c.replace(/\b(bangladesh|dhaka)\b/gi, "").replace(/[\s,]+/g, "").trim();
+        return clean.length > 2; // Must have some substance other than city/country
+      });
+
+      if (filtered.length === 0) {
+        filtered.push(normalize(addr));
       }
 
-      // 4. Keep only Suburb + Dhaka + Bangladesh
-      if (suburbPart) {
-        const cleanSuburb = cleanTerm(suburbPart).trim();
-        if (cleanSuburb) {
-          candidates.push(normalize(`${cleanSuburb}, Dhaka, bangladesh`));
-        }
-      }
-
-      // 5. Explicitly check for known areas if suburbPart didn't match well
-      const knownAreas = ["uttara", "banani", "gulshan", "dhanmondi", "mirpur", "badda", "vatara", "motijheel", "khilgaon", "rampura", "mohammadpur", "tejgaon", "lalbagh", "wari"];
-      const foundArea = parts.map(p => p.toLowerCase()).find(p => knownAreas.some(area => p.includes(area)));
-      if (foundArea) {
-        const matchedArea = knownAreas.find(area => foundArea.includes(area));
-        if (matchedArea) {
-          candidates.push(normalize(`${matchedArea}, Dhaka, bangladesh`));
-        }
-      }
-
-      return [...new Set(candidates)].filter(c => c.length > 5);
+      return [...new Set(filtered)];
     };
 
     try {
