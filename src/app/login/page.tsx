@@ -32,8 +32,13 @@ export default function LoginPage() {
         const res = await fetch("/api/auth/session");
         const session = await res.json();
         
-        if ((session?.user as any)?.role === "STORE_OWNER" || (session?.user as any)?.role === "ADMIN") {
+        const role = (session?.user as any)?.role;
+        if (role === "ADMIN") {
+          router.push("/admin-dashboard");
+        } else if (role === "STORE_OWNER") {
           router.push("/store-dashboard");
+        } else if (role === "DELIVERY_MAN") {
+          router.push("/rider-dashboard");
         } else {
           router.push("/profile");
         }
