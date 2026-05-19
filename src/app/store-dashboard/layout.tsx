@@ -12,6 +12,10 @@ export default async function DashboardLayout({
 }) {
   const session = await auth();
 
+  if (session && (session.user as any).role === "ADMIN") {
+    redirect("/admin-dashboard");
+  }
+
   if (!session || (session.user as any).role !== "STORE_OWNER") {
     // redirect("/login");
     // For now, let's allow access for testing if not logged in
