@@ -1,6 +1,6 @@
 "use client";
 
-import { ShoppingBag, Clock, MapPin, ChevronRight, User, X, ImagePlus, Loader2, Camera } from "lucide-react";
+import { ShoppingBag, Clock, MapPin, ChevronRight, User, X, ImagePlus, Loader2, Camera, Shield, LayoutDashboard, Tag } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -23,6 +23,7 @@ export default function ProfilePage() {
   const [uploadingUserAvatar, setUploadingUserAvatar] = useState(false);
 
   const isStoreOwner = (session?.user as any)?.role === "STORE_OWNER";
+  const isAdmin = (session?.user as any)?.role === "ADMIN";
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -194,44 +195,81 @@ export default function ProfilePage() {
 
            <div className="bg-card border rounded-[2.5rem] overflow-hidden shadow-sm">
               <nav className="flex flex-col">
-                 <Link href="/profile" className="flex items-center justify-between p-6 hover:bg-muted/50 border-b bg-primary/5">
-                    <div className="flex items-center gap-4">
-                       <ShoppingBag className="h-5 w-5 text-primary" />
-                       <span className="font-bold">{isStoreOwner ? "Store Overview" : "Order History"}</span>
-                    </div>
-                    <ChevronRight className="h-4 w-4" />
-                 </Link>
-                 {isStoreOwner ? (
-                   <Link href="/store-dashboard" className="flex items-center justify-between p-6 hover:bg-muted/50 border-b">
-                      <div className="flex items-center gap-4">
-                         <Clock className="h-5 w-5 text-muted-foreground" />
-                         <span className="font-medium">Go to Dashboard</span>
-                      </div>
-                      <ChevronRight className="h-4 w-4" />
-                   </Link>
+                 {isAdmin ? (
+                   <>
+                     <Link href="/profile" className="flex items-center justify-between p-6 hover:bg-muted/50 border-b bg-primary/5">
+                        <div className="flex items-center gap-4">
+                           <Shield className="h-5 w-5 text-primary" />
+                           <span className="font-bold">Admin Console</span>
+                        </div>
+                        <ChevronRight className="h-4 w-4" />
+                     </Link>
+                     <Link href="/admin-dashboard" className="flex items-center justify-between p-6 hover:bg-muted/50 border-b">
+                        <div className="flex items-center gap-4">
+                           <LayoutDashboard className="h-5 w-5 text-muted-foreground" />
+                           <span className="font-medium">System Dashboard</span>
+                        </div>
+                        <ChevronRight className="h-4 w-4" />
+                     </Link>
+                     <Link href="/admin-dashboard/stores" className="flex items-center justify-between p-6 hover:bg-muted/50 border-b">
+                        <div className="flex items-center gap-4">
+                           <ShoppingBag className="h-5 w-5 text-muted-foreground" />
+                           <span className="font-medium">Manage Stores</span>
+                        </div>
+                        <ChevronRight className="h-4 w-4" />
+                     </Link>
+                     <Link href="/admin-dashboard/users" className="flex items-center justify-between p-6 hover:bg-muted/50">
+                        <div className="flex items-center gap-4">
+                           <User className="h-5 w-5 text-muted-foreground" />
+                           <span className="font-medium">Manage Users</span>
+                        </div>
+                        <ChevronRight className="h-4 w-4" />
+                     </Link>
+                   </>
                  ) : (
-                   <Link href="/profile/addresses" className="flex items-center justify-between p-6 hover:bg-muted/50 border-b">
-                      <div className="flex items-center gap-4">
-                         <MapPin className="h-5 w-5 text-muted-foreground" />
-                         <span className="font-medium">My Addresses</span>
-                      </div>
-                      <ChevronRight className="h-4 w-4" />
-                   </Link>
+                   <>
+                     <Link href="/profile" className="flex items-center justify-between p-6 hover:bg-muted/50 border-b bg-primary/5">
+                        <div className="flex items-center gap-4">
+                           <ShoppingBag className="h-5 w-5 text-primary" />
+                           <span className="font-bold">{isStoreOwner ? "Store Overview" : "Order History"}</span>
+                        </div>
+                        <ChevronRight className="h-4 w-4" />
+                     </Link>
+                     {isStoreOwner ? (
+                       <Link href="/store-dashboard" className="flex items-center justify-between p-6 hover:bg-muted/50 border-b">
+                          <div className="flex items-center gap-4">
+                             <Clock className="h-5 w-5 text-muted-foreground" />
+                             <span className="font-medium">Go to Dashboard</span>
+                          </div>
+                          <ChevronRight className="h-4 w-4" />
+                       </Link>
+                     ) : (
+                       <Link href="/profile/addresses" className="flex items-center justify-between p-6 hover:bg-muted/50 border-b">
+                          <div className="flex items-center gap-4">
+                             <MapPin className="h-5 w-5 text-muted-foreground" />
+                             <span className="font-medium">My Addresses</span>
+                          </div>
+                          <ChevronRight className="h-4 w-4" />
+                       </Link>
+                     )}
+                     <Link href="/profile/activity" className="flex items-center justify-between p-6 hover:bg-muted/50">
+                        <div className="flex items-center gap-4">
+                           <Clock className="h-5 w-5 text-muted-foreground" />
+                           <span className="font-medium">Recent Activity</span>
+                        </div>
+                        <ChevronRight className="h-4 w-4" />
+                     </Link>
+                   </>
                  )}
-                 <Link href="/profile/activity" className="flex items-center justify-between p-6 hover:bg-muted/50">
-                    <div className="flex items-center gap-4">
-                       <Clock className="h-5 w-5 text-muted-foreground" />
-                       <span className="font-medium">Recent Activity</span>
-                    </div>
-                    <ChevronRight className="h-4 w-4" />
-                 </Link>
               </nav>
            </div>
         </aside>
 
         {/* Main Content */}
         <div className="flex-1 space-y-8">
-           {isStoreOwner ? (
+           {isAdmin ? (
+             <AdminDashboard />
+           ) : isStoreOwner ? (
              <StoreOwnerDashboard 
                storeData={storeData}
                storeLoading={storeLoading}
@@ -294,6 +332,101 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function AdminDashboard() {
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div>
+        <h1 className="text-3xl font-black bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
+          System Admin Panel
+        </h1>
+        <p className="text-muted-foreground text-sm mt-1">
+          Manage system configurations, control storefront statuses, and inspect platform metrics.
+        </p>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <Link 
+          href="/admin-dashboard" 
+          className="p-6 bg-card border rounded-[2rem] hover:shadow-lg hover:-translate-y-0.5 transition-all group space-y-4"
+        >
+          <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+            <LayoutDashboard className="h-6 w-6" />
+          </div>
+          <div>
+            <h3 className="font-extrabold text-lg flex items-center gap-2">
+              Platform Stats & Overview <ChevronRight className="h-4 w-4 opacity-50" />
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Analyze total sales volumes, platform commissions, active store counts, and weekly sales trends.
+            </p>
+          </div>
+        </Link>
+
+        <Link 
+          href="/admin-dashboard/stores" 
+          className="p-6 bg-card border rounded-[2rem] hover:shadow-lg hover:-translate-y-0.5 transition-all group space-y-4"
+        >
+          <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
+            <ShoppingBag className="h-6 w-6" />
+          </div>
+          <div>
+            <h3 className="font-extrabold text-lg flex items-center gap-2">
+              Manage Restaurants <ChevronRight className="h-4 w-4 opacity-50" />
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              View and audit all registered restaurant storefronts. Suspend, activate, or verify stores instantly.
+            </p>
+          </div>
+        </Link>
+
+        <Link 
+          href="/admin-dashboard/users" 
+          className="p-6 bg-card border rounded-[2rem] hover:shadow-lg hover:-translate-y-0.5 transition-all group space-y-4"
+        >
+          <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
+            <User className="h-6 w-6" />
+          </div>
+          <div>
+            <h3 className="font-extrabold text-lg flex items-center gap-2">
+              Manage Platform Users <ChevronRight className="h-4 w-4 opacity-50" />
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Inspect user directories, search by details, and filter accounts by roles (Customers, Owners, Riders, Admins).
+            </p>
+          </div>
+        </Link>
+
+        <Link 
+          href="/admin-dashboard/coupons" 
+          className="p-6 bg-card border rounded-[2rem] hover:shadow-lg hover:-translate-y-0.5 transition-all group space-y-4"
+        >
+          <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
+            <Tag className="h-6 w-6" />
+          </div>
+          <div>
+            <h3 className="font-extrabold text-lg flex items-center gap-2">
+              System Discount Coupons <ChevronRight className="h-4 w-4 opacity-50" />
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Create and manage platform-wide global coupons to incentivize users with flat or percentage discounts.
+            </p>
+          </div>
+        </Link>
+      </div>
+
+      <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/10 flex items-center gap-4">
+        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+          <Shield className="h-5 w-5" />
+        </div>
+        <div>
+          <h4 className="font-bold text-sm">Security Mode Active</h4>
+          <p className="text-xs text-muted-foreground">You are logged in with the highest access level. Always log out when using shared devices.</p>
+        </div>
+      </div>
     </div>
   );
 }
