@@ -10,15 +10,19 @@ import {
   Star,
   MessageSquare,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  CreditCard
 } from "lucide-react";
 import OrderReviewModal from "@/components/orders/OrderReviewModal";
+import CardPaymentModal from "@/components/payment/CardPaymentModal";
 import toast from "react-hot-toast";
 
 export default function UserOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrderForReview, setSelectedOrderForReview] = useState<any>(null);
+  const [selectedOrderForPayment, setSelectedOrderForPayment] = useState<any>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -111,13 +115,23 @@ export default function UserOrdersPage() {
                   </div>
                   
                   <div className="flex flex-col items-end gap-3">
-                     <div className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest ${
-                       order.status === "DELIVERED" ? "bg-green-100 text-green-700" :
-                       order.status === "PENDING" ? "bg-orange-100 text-orange-700" :
-                       order.status === "CANCELLED" ? "bg-red-100 text-red-700" :
-                       "bg-blue-100 text-blue-700"
-                     }`}>
-                        {order.status}
+                     <div className="flex items-center gap-2">
+                        <div className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest ${
+                          order.status === "DELIVERED" ? "bg-green-100 text-green-700" :
+                          order.status === "PENDING" ? "bg-orange-100 text-orange-700" :
+                          order.status === "CANCELLED" ? "bg-red-100 text-red-700" :
+                          "bg-blue-100 text-blue-700"
+                        }`}>
+                           {order.status}
+                        </div>
+                        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                          order.paymentStatus === "PAID" ? "bg-emerald-100 text-emerald-700" :
+                          order.paymentStatus === "COD" ? "bg-blue-100 text-blue-700" :
+                          order.paymentStatus === "FAILED" ? "bg-rose-100 text-rose-700" :
+                          "bg-amber-100 text-amber-700"
+                        }`}>
+                           {order.paymentStatus === "COD" ? "COD" : order.paymentStatus || "UNPAID"}
+                        </div>
                      </div>
                      <p className="text-2xl font-black text-primary">${order.totalPrice.toFixed(2)}</p>
                   </div>
@@ -183,10 +197,22 @@ export default function UserOrdersPage() {
                     ) : (
                       <div className="space-y-4">
                         <div className="bg-muted/30 p-8 rounded-[2rem] text-center border border-dashed">
-                          <Clock className="h-10 w-10 text-muted-foreground/20 mx-auto mb-4 animate-pulse" />
-                          <p className="text-sm font-bold text-muted-foreground">Tracking your order...</p>
-                          <p className="text-xs text-muted-foreground/60 mt-1">Review option will be available once delivered.</p>
+                           <Clock className="h-10 w-10 text-muted-foreground/20 mx-auto mb-4 animate-pulse" />
+                           <p className="text-sm font-bold text-muted-foreground">Tracking your order...</p>
+                           <p className="text-xs text-muted-foreground/60 mt-1">Review option will be available once delivered.</p>
                         </div>
+                        {order.paymentMethod === "CARD" && order.paymentStatus !== "PAID" && (
+                          <button
+                            onClick={() => {
+                              setSelectedOrderForPayment(order);
+                              setShowPaymentModal(true);
+                            }}
+                            className="w-full py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-[1.5rem] font-black text-sm flex items-center justify-center gap-2 transition-all shadow-md"
+                          >
+                            <CreditCard className="h-4 w-4" />
+                            Retry Payment
+                          </button>
+                        )}
                         {order.status === "PENDING" && (
                           <button 
                             onClick={() => handleCancelOrder(order.id)}
@@ -211,6 +237,23 @@ export default function UserOrdersPage() {
           order={selectedOrderForReview} 
           onClose={() => setSelectedOrderForReview(null)} 
           onSuccess={fetchOrders}
+        />
+      )}
+
+      {showPaymentModal && selectedOrderForPayment && (
+        <CardPaymentModal
+          orders={[selectedOrderForPayment]}
+          preferredGateway={selectedOrderForPayment.paymentMethod === "BKASH" ? "BKASH" : "SSLCOMMERZ"}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setSelectedOrderForPayment(null);
+            fetchOrders();
+          }}
+          onSuccess={() => {
+            setShowPaymentModal(false);
+            setSelectedOrderForPayment(null);
+            fetchOrders();
+          }}
         />
       )}
     </div>

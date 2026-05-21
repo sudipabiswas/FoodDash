@@ -206,6 +206,18 @@ export default function StoreOrdersPage() {
                            <span className="font-bold">{selectedOrder.paymentMethod}</span>
                         </div>
                         <div className="flex justify-between text-sm">
+                           <span>Payment Status</span>
+                           <span className={`font-bold ${
+                             selectedOrder.paymentStatus === "PAID" ? "text-green-600" :
+                             selectedOrder.paymentStatus === "COD" ? "text-blue-600" :
+                             "text-amber-600 font-extrabold animate-pulse"
+                           }`}>
+                             {selectedOrder.paymentStatus === "PAID" ? "PAID" :
+                              selectedOrder.paymentStatus === "COD" ? "Cash on Delivery" :
+                              "UNPAID (Pending)"}
+                           </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
                            <span>Date</span>
                            <span className="font-bold">{new Date(selectedOrder.createdAt).toLocaleDateString()}</span>
                         </div>

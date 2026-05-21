@@ -131,6 +131,7 @@ export async function POST(req: Request) {
           deliveryLat,
           deliveryLng,
           paymentMethod,
+          paymentStatus: paymentMethod === "CASH" ? "COD" : "UNPAID",
           couponId,
           discount,
           totalPrice: Math.max(0, totalPrice),

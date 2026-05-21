@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import dynamic from "next/dynamic";
+import CardPaymentModal from "@/components/payment/CardPaymentModal";
 
 const MapLocationPicker = dynamic(() => import("@/components/map/MapLocationPicker"), { ssr: false });
 
@@ -33,6 +34,7 @@ export default function CartPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [availableCoupons, setAvailableCoupons] = useState<any[]>([]);
   const [checkoutStep, setCheckoutStep] = useState(1); // 1: Cart/Address, 2: Review
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   useEffect(() => {
     const fetchCoupons = async () => {
@@ -134,8 +136,12 @@ export default function CartPage() {
 
       const orders = await response.json();
       setCreatedOrders(orders);
-      setOrderComplete(true);
       clearCart();
+      if (paymentMethod !== "CASH") {
+        setShowPaymentModal(true);
+      } else {
+        setOrderComplete(true);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -161,15 +167,38 @@ export default function CartPage() {
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Order ID</p>
                   <p className="font-mono text-sm">#{order.id.slice(-8).toUpperCase()}</p>
                </div>
-               <div className="text-right flex items-center gap-4">
-                  <p className="font-extrabold text-primary text-xl">${order.totalPrice.toFixed(2)}</p>
-                  <Link 
-                    href={`/order-tracking/${order.id}`} 
-                    className="px-6 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground rounded-full text-sm font-bold transition-all"
-                  >
-                    Track Order
-                  </Link>
-               </div>
+                <div className="text-right flex items-center gap-4">
+                   <div className="text-left mr-4">
+                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Payment</p>
+                     <span className={`inline-block px-3 py-1 rounded-full text-[9px] font-black uppercase mt-1 ${
+                       order.paymentStatus === "PAID" ? "bg-green-100 text-green-700" :
+                       order.paymentStatus === "COD" ? "bg-blue-100 text-blue-700" :
+                       "bg-red-100 text-red-700"
+                     }`}>
+                       {order.paymentStatus === "PAID" ? "PAID" :
+                        order.paymentStatus === "COD" ? "Cash on Delivery" :
+                        "UNPAID/FAILED"}
+                     </span>
+                   </div>
+                   <p className="font-extrabold text-primary text-xl">${order.totalPrice.toFixed(2)}</p>
+                   {order.paymentMethod !== "CASH" && order.paymentStatus !== "PAID" && (
+                     <button
+                       onClick={() => {
+                         setCreatedOrders([order]);
+                         setShowPaymentModal(true);
+                       }}
+                       className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-full text-xs font-bold transition-all shadow-md"
+                     >
+                       Pay Now
+                     </button>
+                   )}
+                   <Link 
+                     href={`/order-tracking/${order.id}`} 
+                     className="px-6 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground rounded-full text-sm font-bold transition-all"
+                   >
+                     Track Order
+                   </Link>
+                </div>
             </div>
           ))}
         </div>
@@ -275,28 +304,68 @@ export default function CartPage() {
                  
                  <div className="space-y-4">
                     <h2 className="text-xl font-bold">Payment Method</h2>
-                    <div className="grid gap-3">
-                       {["CASH", "CARD"].map((method) => (
-                         <label 
-                           key={method} 
-                           className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all ${
-                             paymentMethod === method ? "bg-primary/5 border-primary text-primary" : "hover:bg-muted"
-                           }`}
-                         >
-                           <div className="flex items-center gap-3">
-                              <input 
-                                type="radio" 
-                                name="payment" 
-                                value={method} 
-                                checked={paymentMethod === method}
-                                onChange={(e) => setPaymentMethod(e.target.value)}
-                                className="w-4 h-4 accent-primary"
-                              />
-                              <span className="font-bold">{method === "CASH" ? "Cash on Delivery" : "Credit/Debit Card"}</span>
-                           </div>
-                         </label>
-                       ))}
-                    </div>
+                     <div className="grid gap-3">
+                       <label 
+                         className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all ${
+                           paymentMethod === "CASH" ? "bg-primary/5 border-primary text-primary" : "hover:bg-muted"
+                         }`}
+                       >
+                         <div className="flex items-center gap-3">
+                            <input 
+                              type="radio" 
+                              name="paymentCategory" 
+                              value="CASH" 
+                              checked={paymentMethod === "CASH"}
+                              onChange={() => setPaymentMethod("CASH")}
+                              className="w-4 h-4 accent-primary"
+                            />
+                            <span className="font-bold">Cash on Delivery</span>
+                         </div>
+                       </label>
+
+                       <label 
+                         className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all ${
+                           paymentMethod !== "CASH" ? "bg-primary/5 border-primary text-primary" : "hover:bg-muted"
+                         }`}
+                       >
+                         <div className="flex items-center gap-3">
+                            <input 
+                              type="radio" 
+                              name="paymentCategory" 
+                              value="DIGITAL" 
+                              checked={paymentMethod !== "CASH"}
+                              onChange={() => setPaymentMethod(paymentMethod === "CASH" ? "CARD" : paymentMethod)}
+                              className="w-4 h-4 accent-primary"
+                            />
+                            <span className="font-bold">Digital Payment</span>
+                         </div>
+                       </label>
+
+                       {paymentMethod !== "CASH" && (
+                         <div className="pl-6 pr-2 py-2 space-y-3 border-l-2 border-primary/20 ml-2 animate-in slide-in-from-top-2">
+                           <label className="flex items-center gap-3 cursor-pointer group">
+                             <input 
+                               type="radio" 
+                               name="digitalMethod" 
+                               checked={paymentMethod === "CARD"}
+                               onChange={() => setPaymentMethod("CARD")}
+                               className="w-4 h-4 accent-primary"
+                             />
+                             <span className="text-sm font-semibold group-hover:text-primary transition-colors">💳 Debit/Credit Card (SSLCOMMERZ)</span>
+                           </label>
+                           <label className="flex items-center gap-3 cursor-pointer group">
+                             <input 
+                               type="radio" 
+                               name="digitalMethod" 
+                               checked={paymentMethod === "BKASH"}
+                               onChange={() => setPaymentMethod("BKASH")}
+                               className="w-4 h-4 accent-primary"
+                             />
+                             <span className="text-sm font-semibold text-pink-600 group-hover:text-pink-700 transition-colors">📱 bKash (Mobile Banking)</span>
+                           </label>
+                         </div>
+                       )}
+                     </div>
                  </div>
               </div>
             </>
@@ -488,6 +557,21 @@ export default function CartPage() {
           </div>
         </div>
       </div>
+      {showPaymentModal && (
+        <CardPaymentModal
+          orders={createdOrders}
+          preferredGateway={paymentMethod === "BKASH" ? "BKASH" : "SSLCOMMERZ"}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setOrderComplete(true);
+          }}
+          onSuccess={() => {
+            setShowPaymentModal(false);
+            setCreatedOrders(prev => prev.map(o => ({ ...o, paymentStatus: "PAID" })));
+            setOrderComplete(true);
+          }}
+        />
+      )}
     </div>
   );
 }

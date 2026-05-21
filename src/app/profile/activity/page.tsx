@@ -1,18 +1,20 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { Clock, ShoppingBag, Store, User, ChevronLeft } from "lucide-react";
+import { Clock, ShoppingBag, Store, User, ChevronLeft, Bike } from "lucide-react";
 import Link from "next/link";
 
 export default function ActivityPage() {
   const { data: session } = useSession();
   const isStoreOwner = (session?.user as any)?.role === "STORE_OWNER";
+  const isRider = (session?.user as any)?.role === "DELIVERY_MAN";
 
   const activities = [
     { id: 1, type: "LOGIN", content: "Logged in from a new device in Dhaka, BD", time: "2 hours ago", icon: User, color: "text-blue-600", bg: "bg-blue-100" },
-    { id: 2, type: "ORDER", content: isStoreOwner ? "Received a new order #2241 from John Doe" : "Placed a new order #2241 at Burger King", time: "5 hours ago", icon: ShoppingBag, color: "text-green-600", bg: "bg-green-100" },
+    { id: 2, type: "ORDER", content: isRider ? "Completed delivery mission #2241 for Burger King" : isStoreOwner ? "Received a new order #2241 from John Doe" : "Placed a new order #2241 at Burger King", time: "5 hours ago", icon: ShoppingBag, color: "text-green-600", bg: "bg-green-100" },
     { id: 3, type: "PROFILE", content: "Updated profile picture and phone number", time: "1 day ago", icon: User, color: "text-purple-600", bg: "bg-purple-100" },
     { id: 4, type: "STORE", content: "Updated store opening hours for the weekend", time: "2 days ago", icon: Store, color: "text-orange-600", bg: "bg-orange-100", hidden: !isStoreOwner },
+    { id: 5, type: "DUTY", content: "Switched duty status to Online & Active", time: "3 days ago", icon: Bike, color: "text-teal-600", bg: "bg-teal-100", hidden: !isRider },
   ].filter((a: any) => !a.hidden);
 
   return (

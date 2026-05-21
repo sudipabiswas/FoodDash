@@ -57,7 +57,7 @@ export default function MapLocationPicker({
   }
 
   return (
-    <div className="h-full w-full">
+    <div className="h-[300px] w-full rounded-2xl overflow-hidden border shadow-inner">
       <MapContainer
         center={position}
         zoom={15}

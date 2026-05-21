@@ -1,12 +1,13 @@
 "use client";
 
-import { ShoppingBag, Clock, MapPin, ChevronRight, User, X, ImagePlus, Loader2, Camera, Shield, LayoutDashboard, Tag } from "lucide-react";
+import { ShoppingBag, Clock, MapPin, ChevronRight, User, X, ImagePlus, Loader2, Camera, Shield, LayoutDashboard, Tag, Bike, TrendingUp, ClipboardList, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { CustomerDashboard } from "@/components/profile/CustomerDashboard";
 import { StoreOwnerDashboard } from "@/components/profile/StoreOwnerDashboard";
+import { RiderDashboard } from "@/components/profile/RiderDashboard";
 
 export default function ProfilePage() {
   const { data: session, status, update } = useSession();
@@ -24,6 +25,7 @@ export default function ProfilePage() {
 
   const isStoreOwner = (session?.user as any)?.role === "STORE_OWNER";
   const isAdmin = (session?.user as any)?.role === "ADMIN";
+  const isRider = (session?.user as any)?.role === "DELIVERY_MAN";
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -226,7 +228,45 @@ export default function ProfilePage() {
                         <ChevronRight className="h-4 w-4" />
                      </Link>
                    </>
-                 ) : (
+                 ) : isRider ? (
+                    <>
+                      <Link href="/profile" className="flex items-center justify-between p-6 hover:bg-muted/50 border-b bg-primary/5">
+                         <div className="flex items-center gap-4">
+                            <Bike className="h-5 w-5 text-primary" />
+                            <span className="font-bold">Rider Overview</span>
+                         </div>
+                         <ChevronRight className="h-4 w-4" />
+                      </Link>
+                      <Link href="/rider-dashboard" className="flex items-center justify-between p-6 hover:bg-muted/50 border-b">
+                         <div className="flex items-center gap-4">
+                            <LayoutDashboard className="h-5 w-5 text-muted-foreground" />
+                            <span className="font-medium">Rider Console</span>
+                         </div>
+                         <ChevronRight className="h-4 w-4" />
+                      </Link>
+                      <Link href="/rider-dashboard?tab=growth" className="flex items-center justify-between p-6 hover:bg-muted/50 border-b">
+                         <div className="flex items-center gap-4">
+                            <Wallet className="h-5 w-5 text-muted-foreground" />
+                            <span className="font-medium">My Earnings</span>
+                         </div>
+                         <ChevronRight className="h-4 w-4" />
+                      </Link>
+                      <Link href="/rider-dashboard?tab=dutyrecord" className="flex items-center justify-between p-6 hover:bg-muted/50 border-b">
+                         <div className="flex items-center gap-4">
+                            <ClipboardList className="h-5 w-5 text-muted-foreground" />
+                            <span className="font-medium">Duty Record</span>
+                         </div>
+                         <ChevronRight className="h-4 w-4" />
+                      </Link>
+                      <Link href="/profile/activity" className="flex items-center justify-between p-6 hover:bg-muted/50">
+                         <div className="flex items-center gap-4">
+                            <Clock className="h-5 w-5 text-muted-foreground" />
+                            <span className="font-medium">Recent Activity</span>
+                         </div>
+                         <ChevronRight className="h-4 w-4" />
+                      </Link>
+                    </>
+                  ) : (
                    <>
                      <Link href="/profile" className="flex items-center justify-between p-6 hover:bg-muted/50 border-b bg-primary/5">
                         <div className="flex items-center gap-4">
@@ -276,6 +316,8 @@ export default function ProfilePage() {
                uploadingStoreLogo={uploadingStoreLogo}
                handleStoreImageUpload={handleStoreImageUpload}
              />
+           ) : isRider ? (
+             <RiderDashboard />
            ) : (
              <CustomerDashboard />
            )}

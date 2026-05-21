@@ -89,6 +89,7 @@ model Order {
   totalPrice      Float
   discount        Float       @default(0)
   paymentMethod   String      @default("CASH") // CASH, CARD
+  paymentStatus   String      @default("UNPAID") // UNPAID, PAID, FAILED, COD
   couponId        String?
   coupon          Coupon?     @relation(fields: [couponId], references: [id])
   deliveryAddress String
@@ -97,6 +98,8 @@ model Order {
   deliveryCharge  Float       @default(0)
   items           OrderItem[]
   review          Review?
+  paymentIntentId String?
+  paymentIntent   PaymentIntent? @relation(fields: [paymentIntentId], references: [id])
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 }
@@ -135,4 +138,57 @@ model Coupon {
   expiryDate DateTime
   isActive   Boolean  @default(true)
   orders     Order[]
+}
+
+model PaymentIntent {
+  id             String               @id @default(cuid())
+  userId         String
+  amount         Float
+  currency       String               @default("BDT")
+  status         String               @default("CREATED") // CREATED, PENDING, AUTHORIZED, CAPTURED, SETTLED, FAILED, REFUNDED, DISPUTED
+  idempotencyKey String               @unique
+  gatewayUrl     String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  
+  transactions   PaymentTransaction[]
+  orders         Order[]
+}
+
+model PaymentTransaction {
+  id                  String         @id @default(cuid())
+  intentId            String
+  intent              PaymentIntent  @relation(fields: [intentId], references: [id])
+  gateway             String         // SSLCOMMERZ, BKASH, etc.
+  gatewayTxnId        String         @unique
+  maskedCardLast4     String?
+  cardBrand           String?
+  status              String         // SUCCESS, FAILED, CANCELLED
+  gatewayResponseCode String?
+  rawPayloadEncrypted String?        // AES-256 encrypted response body
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  
+  refunds             PaymentRefund[]
+}
+
+model PaymentRefund {
+  id              String             @id @default(cuid())
+  transactionId   String
+  transaction     PaymentTransaction @relation(fields: [transactionId], references: [id])
+  amount          Float
+  status          String             // REQUESTED, SUCCEEDED, FAILED
+  gatewayRefundId String?
+  createdAt       DateTime           @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actor     String   // Email or User ID
+  action    String   // PAYMENT_INTENT_CREATED, TRANSACTION_VERIFIED, etc.
+  entity    String   // PaymentIntent, PaymentTransaction
+  before    String?  // JSON string
+  after     String?  // JSON string
+  ip        String?
+  timestamp DateTime @default(now())
 }

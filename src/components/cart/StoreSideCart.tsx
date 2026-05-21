@@ -4,11 +4,14 @@ import { useCart } from "./CartProvider";
 import { ShoppingBag, ArrowRight, Minus, Plus, Trash2, CreditCard, Banknote } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
+import CardPaymentModal from "@/components/payment/CardPaymentModal";
 
 export default function StoreSideCart({ storeId, storeName, deliveryCharge }: { storeId: string, storeName: string, deliveryCharge: number }) {
   const { items, totalPrice, addItem, removeItem, clearCart } = useCart();
   const [isOrdering, setIsOrdering] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+  const [createdOrders, setCreatedOrders] = useState<any[]>([]);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("CASH");
   const [couponCode, setCouponCode] = useState("");
@@ -46,9 +49,18 @@ export default function StoreSideCart({ storeId, storeName, deliveryCharge }: { 
         throw new Error(data.error || "Failed to place order");
       }
 
-      setOrderComplete(true);
+      const orders = await response.json();
+      const ordersArray = Array.isArray(orders) ? orders : [orders];
+      setCreatedOrders(ordersArray);
+      
       // Only clear items for THIS store
       storeItems.forEach(item => removeItem(item.id));
+
+      if (paymentMethod === "CARD") {
+        setShowPaymentModal(true);
+      } else {
+        setOrderComplete(true);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -184,6 +196,19 @@ export default function StoreSideCart({ storeId, storeName, deliveryCharge }: { 
           <>Place Order <ArrowRight className="h-4 w-4" /></>
         )}
       </button>
+      {showPaymentModal && (
+        <CardPaymentModal
+          orders={createdOrders}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setOrderComplete(true);
+          }}
+          onSuccess={() => {
+            setShowPaymentModal(false);
+            setOrderComplete(true);
+          }}
+        />
+      )}
     </div>
   );
 }
